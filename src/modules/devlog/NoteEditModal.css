@@ -229,270 +229,7 @@
   flex-direction: column;
 }
 
-/* ── DevlogEditor wrapper ───────────────────────────────────────── */
-.devlog-editor-wrapper {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
-
-.devlog-editor-wrapper--no-media .devlog-editor-content .ProseMirror a,
-.devlog-editor-wrapper--no-media .ProseMirror .devlog-image-wrapper {
-  display: none !important;
-}
-
-/* ── 工具栏 ─────────────────────────────────────────────────────── */
-.devlog-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 6px 12px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-surface);
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
-.devlog-toolbar-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: 13px;
-  transition: all var(--transition-fast);
-}
-.devlog-toolbar-btn:hover { background: var(--bg-hover); color: var(--text); }
-.devlog-toolbar-btn.active { background: var(--accent-dim); color: var(--accent); }
-
-.devlog-toolbar-sep {
-  width: 1px;
-  height: 18px;
-  background: var(--border);
-  margin: 0 4px;
-  flex-shrink: 0;
-}
-
-.devlog-toolbar-link-area {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  position: relative;
-}
-
-.devlog-link-input-panel {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 4px 6px;
-  box-shadow: var(--shadow-lg);
-  animation: fadeIn 0.1s ease;
-}
-
-.devlog-link-input {
-  width: 200px;
-  padding: 4px 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-root);
-  color: var(--text);
-  font-size: 12px;
-  font-family: var(--font-ui);
-  outline: none;
-}
-.devlog-link-input:focus { border-color: var(--border-focus); }
-
-.devlog-link-colors {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.devlog-link-color-dot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: transform var(--transition-fast);
-  flex-shrink: 0;
-}
-.devlog-link-color-dot:hover { transform: scale(1.2); }
-.devlog-link-color-dot.selected { border-color: var(--bg-surface); outline: 2px solid currentColor; outline-offset: 1px; }
-
-.devlog-link-color-custom {
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  cursor: pointer;
-  background: none;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.devlog-link-color-custom::-webkit-color-swatch-wrapper { padding: 0; }
-.devlog-link-color-custom::-webkit-color-swatch { border: none; border-radius: 50%; }
-
-.devlog-link-confirm-btn {
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: var(--accent);
-  color: #fff;
-  font-size: 11px;
-  font-family: var(--font-ui);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background var(--transition-fast);
-}
-.devlog-link-confirm-btn:hover { background: var(--accent-hover); }
-.devlog-link-confirm-btn--full { width: 100%; margin-top: 4px; padding: 6px; }
-
-/* ── Link right-click popover ───────────────────────────────────── */
-.devlog-popover-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-}
-
-.devlog-link-popover {
-  position: fixed;
-  z-index: 91;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 10px;
-  min-width: 240px;
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  animation: fadeIn 0.1s ease;
-}
-
-.devlog-link-popover-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.devlog-link-popover-close {
-  width: 20px;
-  height: 20px;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background var(--transition-fast);
-  line-height: 1;
-}
-.devlog-link-popover-close:hover { background: var(--bg-hover); }
-
-/* ── ProseMirror 编辑器主体 ─────────────────────────────────────── */
-.devlog-editor-content {
-  flex: 1;
-  overflow-y: auto;
-  position: relative;
-}
-
-.devlog-editor-content .ProseMirror {
-  outline: none;
-  min-height: 100%;
-  padding: 16px 20px;
-  line-height: 1.75;
-  font-size: 13.5px;
-  color: var(--text);
-}
-
-.devlog-editor-content .ProseMirror p.is-editor-empty:first-child::before {
-  content: attr(data-placeholder);
-  color: var(--text-muted);
-  pointer-events: none;
-  float: left;
-  height: 0;
-}
-
-/* Bold / Italic */
-.devlog-editor-content .ProseMirror strong { font-weight: 700; }
-.devlog-editor-content .ProseMirror em { font-style: italic; }
-
-/* Lists */
-/* 段落紧排 */
-.devlog-editor-content .ProseMirror p {
-  margin: 0 0 8px;
-}
-.devlog-editor-content .ProseMirror p:last-child {
-  margin-bottom: 0;
-}
-
-.devlog-editor-content .ProseMirror ul,
-.devlog-editor-content .ProseMirror ol {
-  padding-left: 1.5em;
-  margin: 4px 0;
-}
-.devlog-editor-content .ProseMirror li { margin: 2px 0; }
-
-/* Task list */
-.devlog-editor-content .ProseMirror ul[data-type="taskList"] {
-  list-style: none;
-  padding-left: 0.25em;
-}
-.devlog-editor-content .ProseMirror ul[data-type="taskList"] li {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-}
-.devlog-editor-content .ProseMirror ul[data-type="taskList"] li > label {
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-.devlog-editor-content .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
-  cursor: pointer;
-  accent-color: var(--accent);
-}
-.devlog-editor-content .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div > p {
-  text-decoration: line-through;
-  color: var(--text-muted);
-}
-
-/* Links — capsule style */
-.devlog-editor-content .ProseMirror a {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid;
-  border-radius: 100px;
-  padding: 1px 8px 1px 6px;
-  font-size: 0.875em;
-  text-decoration: none;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity var(--transition-fast);
-}
-.devlog-editor-content .ProseMirror a::before {
-  content: "🔗";
-  font-size: 0.75em;
-  margin-right: 4px;
-  opacity: 0.7;
-}
-.devlog-editor-content .ProseMirror a:hover { opacity: 0.75; }
+/* 工具栏 & 编辑器样式已迁移至 RichTextEditor.css */
 
 /* ── 图片 NodeView ──────────────────────────────────────────────── */
 .devlog-image-wrapper {
@@ -573,6 +310,27 @@
 .devlog-image-btn:hover { background: rgba(0, 0, 0, 0.7); }
 .devlog-image-btn--danger { background: var(--danger); }
 .devlog-image-btn--danger:hover { background: var(--danger-hover); }
+
+/* ── Devlog 链接胶囊样式 ───────────────────────────────────────── */
+.rich-editor-content .ProseMirror a.devlog-link {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid;
+  border-radius: 100px;
+  padding: 1px 8px 1px 6px;
+  font-size: 0.875em;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity var(--transition-fast);
+}
+.rich-editor-content .ProseMirror a.devlog-link::before {
+  content: "🔗";
+  font-size: 0.75em;
+  margin-right: 4px;
+  opacity: 0.7;
+}
+.rich-editor-content .ProseMirror a.devlog-link:hover { opacity: 0.75; }
 
 /* ── 图片放大灯箱 ───────────────────────────────────────────────── */
 .devlog-zoom-overlay {

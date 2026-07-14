@@ -484,7 +484,9 @@
 }
 
 .calendar-modal {
-  width: min(520px, calc(100vw - 32px));
+  width: min(620px, calc(100vw - 32px));
+  max-height: 90vh;
+  overflow-y: auto;
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(226, 232, 240, 0.9);
   border-radius: 18px;
@@ -664,4 +666,27 @@
   .calendar-upcoming {
     min-height: 240px;
   }
+}
+
+/* ── 富文本编辑器（备注） ──────────────────────────────────────── */
+.calendar-notes-label {
+  flex: 1;
+  min-height: 0;
+}
+
+.calendar-rich-editor {
+  border: 1px solid rgba(203, 213, 225, 0.95);
+  border-radius: 12px;
+  overflow: hidden;
+  height: 220px;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.calendar-rich-editor .rich-editor-wrapper {
+  height: 100%;
+}
+
+.calendar-rich-editor .rich-editor-content .ProseMirror {
+  font-size: 13px;
+  padding: 10px 12px;
 }

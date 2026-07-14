@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useAppStore } from "../../stores/appStore";
 import { syncHolidaysForYear } from "../../lib/holidaySync";
+import { RichTextEditor } from "../../components/RichTextEditor";
+import { plainTextToTipTapJSON, tipTapToPlainText, isTipTapDoc } from "../../lib/richTextMigration";
 import "./CalendarModule.css";
 
 type EventColor = "red" | "blue" | "green" | "orange" | "holiday" | "workday";
@@ -14,7 +16,8 @@ type CalendarEvent = {
   endDate?: string;
   endTime?: string;
   color?: EventColor;
-  notes?: string;
+  /** TipTap ProseMirror JSON doc — migrated from plain string on load */
+  notes?: object | string;
 };
 
 type EventDraft = {
@@ -25,7 +28,7 @@ type EventDraft = {
   endDate: string;
   endTime: string;
   color: EventColor;
-  notes: string;
+  notes: object;
 };
 
 type EditorState = {
@@ -271,6 +274,15 @@ export function CalendarModule() {
   };
 
   const openEditEditor = (event: CalendarEvent) => {
+    let notesObj: object;
+    const raw = event.notes;
+    if (isTipTapDoc(raw)) {
+      notesObj = raw;
+    } else if (typeof raw === "string" && raw.trim()) {
+      notesObj = plainTextToTipTapJSON(raw);
+    } else {
+      notesObj = initialContent();
+    }
     setEditor({
       open: true,
       draft: {
@@ -281,7 +293,7 @@ export function CalendarModule() {
         endDate: event.endDate ?? event.startDate,
         endTime: event.endTime ?? "",
         color: event.color ?? "blue",
-        notes: event.notes ?? "",
+        notes: notesObj,
       },
     });
     setSaveError(null);
@@ -315,6 +327,10 @@ export function CalendarModule() {
       return;
     }
 
+    // 仅当备注非空时保存
+    const notesObj = draft.notes as { type?: string; content?: unknown[] };
+    const hasNotes = notesObj?.type === "doc" && Array.isArray(notesObj.content) && notesObj.content.length > 0;
+
     const nextEvent: CalendarEvent = {
       id: draft.id ?? createEventId(),
       title,
@@ -323,7 +339,7 @@ export function CalendarModule() {
       endDate: draft.endDate,
       endTime: draft.endTime || undefined,
       color: draft.color,
-      notes: draft.notes.trim() || undefined,
+      notes: hasNotes ? notesObj : undefined,
     };
 
     const nextEvents = draft.id
@@ -425,7 +441,7 @@ export function CalendarModule() {
                 </div>
                 <strong>{event.title}</strong>
                 <span className="calendar-event-time">{formatEventTimeRange(event)}</span>
-                {event.notes && <p>{event.notes}</p>}
+                {event.notes && <p>{tipTapToPlainText(event.notes)}</p>}
               </button>
             ))}
           </div>
@@ -573,13 +589,16 @@ export function CalendarModule() {
                 </div>
               </label>
 
-              <label>
+              <label className="calendar-notes-label">
                 <span>备注</span>
-                <textarea
-                  value={editor.draft.notes}
-                  onChange={(event) => updateDraft("notes", event.target.value)}
-                  placeholder="可选备注"
-                />
+                <div className="calendar-rich-editor">
+                  <RichTextEditor
+                    initialContent={editor.draft.notes as object}
+                    onChange={(json) => updateDraft("notes", json as EventDraft["notes"])}
+                    placeholder="可选备注…"
+                    hideLinkToolbar
+                  />
+                </div>
               </label>
 
               {saveError && <div className="calendar-error">{saveError}</div>}
@@ -728,6 +747,10 @@ function isSameMonth(date: Date, month: Date) {
   return date.getFullYear() === month.getFullYear() && date.getMonth() === month.getMonth();
 }
 
+function initialContent(): object {
+  return { type: "doc", content: [] };
+}
+
 function createDraft(date: string): EventDraft {
   return {
     title: "",
@@ -736,7 +759,7 @@ function createDraft(date: string): EventDraft {
     endDate: date,
     endTime: "",
     color: "blue",
-    notes: "",
+    notes: initialContent(),
   };
 }
 
