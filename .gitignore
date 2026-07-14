@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-electron/
+target/
+package-lock.json
+*.lock
+
+# Runtime data (user-specific)
+data/
+docs/design.md
+*.bak
+scripts/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.vscode/
+
+# Custom modules (secondary development)
+src/custom/
+public/custom-tools/
+
+# Vault salt (unique per deployment)
+src/modules/vault/vault.salt.ts

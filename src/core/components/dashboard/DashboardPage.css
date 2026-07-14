@@ -1,0 +1,25 @@
+.dashboard-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-root);
+  overflow: auto;
+  animation: fadeIn 0.25s ease;
+}
+
+.dashboard-calendar-page {
+  flex: 1;
+  min-height: 0;
+  padding: 16px 28px 28px;
+}
+
+@media (max-width: 960px) {
+  .dashboard-calendar-page {
+    padding: 12px 12px 18px;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

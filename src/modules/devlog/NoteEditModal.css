@@ -1,0 +1,932 @@
+/* ─────────────────────────────────────────────────────────────────────
+   NoteEditModal — 笔记编辑灯箱 + DevlogEditor 编辑器样式
+───────────────────────────────────────────────────────────────────── */
+
+/* ── 遮罩层 ─────────────────────────────────────────────────────── */
+.note-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: fadeIn 0.15s ease;
+}
+
+/* ── 弹窗主体 ───────────────────────────────────────────────────── */
+.note-modal {
+  width: min(860px, 94vw);
+  height: min(82vh, 740px);
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── 头部 ───────────────────────────────────────────────────────── */
+.note-modal-header {
+  flex-shrink: 0;
+  padding: 14px 18px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.note-modal-row1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.note-modal-title-input {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-ui);
+  min-width: 0;
+}
+.note-modal-title-input::placeholder { color: var(--text-muted); }
+
+.note-modal-row1-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.note-modal-save-badge {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+.note-modal-save-badge--saved  { color: var(--text-muted); }
+.note-modal-save-badge--saving { color: var(--accent); background: var(--accent-dim); }
+.note-modal-save-badge--error  { color: var(--danger); background: rgba(220,38,38,.08); }
+
+.note-modal-close-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.note-modal-close-btn:hover { background: var(--bg-hover); color: var(--text); }
+
+/* ── 第二行：标签 + meta ────────────────────────────────────────── */
+.note-modal-row2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.note-modal-tags-area {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.note-modal-tag-btn {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+.note-modal-tag-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.note-modal-tag-picker-wrap {
+  position: relative;
+}
+
+.note-modal-tag-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 160px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.note-modal-tag-empty {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 8px 10px;
+}
+
+.note-modal-tag-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast);
+}
+.note-modal-tag-option:hover { background: var(--bg-hover); }
+.note-modal-tag-option.checked { background: var(--bg-active); }
+
+.note-modal-tag-check {
+  margin-left: auto;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ── Meta area ──────────────────────────────────────────────────── */
+.note-modal-meta-area {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.note-modal-date-btn {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast), color var(--transition-fast);
+  white-space: nowrap;
+}
+.note-modal-date-btn:hover { background: var(--bg-hover); color: var(--text); }
+
+.note-modal-action-btn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+.note-modal-action-btn:hover { background: var(--bg-hover); color: var(--text); }
+.note-modal-action-btn--on { color: var(--accent); background: var(--accent-dim); }
+.note-modal-action-btn--danger {
+  font-size: 11px;
+  width: auto;
+  padding: 0 8px;
+  color: #fff;
+  background: var(--danger);
+  border-radius: var(--radius-sm);
+}
+.note-modal-action-btn--danger:hover { background: var(--danger-hover); }
+.note-modal-action-btn--danger-outline { color: var(--text-secondary); }
+.note-modal-action-btn--danger-outline:hover { color: var(--danger); background: rgba(220,38,38,.08); }
+
+/* ── 分界线 ─────────────────────────────────────────────────────── */
+.note-modal-divider {
+  height: 1px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* ── 编辑器区域 ─────────────────────────────────────────────────── */
+.note-modal-body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── DevlogEditor wrapper ───────────────────────────────────────── */
+.devlog-editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.devlog-editor-wrapper--no-media .devlog-editor-content .ProseMirror a,
+.devlog-editor-wrapper--no-media .ProseMirror .devlog-image-wrapper {
+  display: none !important;
+}
+
+/* ── 工具栏 ─────────────────────────────────────────────────────── */
+.devlog-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.devlog-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all var(--transition-fast);
+}
+.devlog-toolbar-btn:hover { background: var(--bg-hover); color: var(--text); }
+.devlog-toolbar-btn.active { background: var(--accent-dim); color: var(--accent); }
+
+.devlog-toolbar-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.devlog-toolbar-link-area {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+
+.devlog-link-input-panel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 4px 6px;
+  box-shadow: var(--shadow-lg);
+  animation: fadeIn 0.1s ease;
+}
+
+.devlog-link-input {
+  width: 200px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-root);
+  color: var(--text);
+  font-size: 12px;
+  font-family: var(--font-ui);
+  outline: none;
+}
+.devlog-link-input:focus { border-color: var(--border-focus); }
+
+.devlog-link-colors {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.devlog-link-color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+  flex-shrink: 0;
+}
+.devlog-link-color-dot:hover { transform: scale(1.2); }
+.devlog-link-color-dot.selected { border-color: var(--bg-surface); outline: 2px solid currentColor; outline-offset: 1px; }
+
+.devlog-link-color-custom {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  cursor: pointer;
+  background: none;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.devlog-link-color-custom::-webkit-color-swatch-wrapper { padding: 0; }
+.devlog-link-color-custom::-webkit-color-swatch { border: none; border-radius: 50%; }
+
+.devlog-link-confirm-btn {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-fast);
+}
+.devlog-link-confirm-btn:hover { background: var(--accent-hover); }
+.devlog-link-confirm-btn--full { width: 100%; margin-top: 4px; padding: 6px; }
+
+/* ── Link right-click popover ───────────────────────────────────── */
+.devlog-popover-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+}
+
+.devlog-link-popover {
+  position: fixed;
+  z-index: 91;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  min-width: 240px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: fadeIn 0.1s ease;
+}
+
+.devlog-link-popover-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.devlog-link-popover-close {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast);
+  line-height: 1;
+}
+.devlog-link-popover-close:hover { background: var(--bg-hover); }
+
+/* ── ProseMirror 编辑器主体 ─────────────────────────────────────── */
+.devlog-editor-content {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
+
+.devlog-editor-content .ProseMirror {
+  outline: none;
+  min-height: 100%;
+  padding: 16px 20px;
+  line-height: 1.75;
+  font-size: 13.5px;
+  color: var(--text);
+}
+
+.devlog-editor-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* Bold / Italic */
+.devlog-editor-content .ProseMirror strong { font-weight: 700; }
+.devlog-editor-content .ProseMirror em { font-style: italic; }
+
+/* Lists */
+/* 段落紧排 */
+.devlog-editor-content .ProseMirror p {
+  margin: 0 0 8px;
+}
+.devlog-editor-content .ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
+.devlog-editor-content .ProseMirror ul,
+.devlog-editor-content .ProseMirror ol {
+  padding-left: 1.5em;
+  margin: 4px 0;
+}
+.devlog-editor-content .ProseMirror li { margin: 2px 0; }
+
+/* Task list */
+.devlog-editor-content .ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0.25em;
+}
+.devlog-editor-content .ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.devlog-editor-content .ProseMirror ul[data-type="taskList"] li > label {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.devlog-editor-content .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+.devlog-editor-content .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div > p {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+/* Links — capsule style */
+.devlog-editor-content .ProseMirror a {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid;
+  border-radius: 100px;
+  padding: 1px 8px 1px 6px;
+  font-size: 0.875em;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity var(--transition-fast);
+}
+.devlog-editor-content .ProseMirror a::before {
+  content: "🔗";
+  font-size: 0.75em;
+  margin-right: 4px;
+  opacity: 0.7;
+}
+.devlog-editor-content .ProseMirror a:hover { opacity: 0.75; }
+
+/* ── 图片 NodeView ──────────────────────────────────────────────── */
+.devlog-image-wrapper {
+  display: inline-block;
+  margin: 0;
+  line-height: 0;
+  vertical-align: top;
+}
+
+.devlog-image-container {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 0;
+}
+
+.devlog-image-thumb {
+  display: block;
+  max-height: 180px;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+  border: none;
+  cursor: zoom-in;
+  box-shadow: 0 2px 8px rgba(0,0,0,.10), 0 1px 3px rgba(0,0,0,.06);
+  transition: opacity var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+/* 编辑器内图片行：将所有图片容器变为 inline-flex 紧排 */
+.devlog-editor-content .ProseMirror .devlog-image-wrapper + .devlog-image-wrapper {
+  margin-left: 2px;
+}
+.devlog-image-thumb:hover {
+  opacity: 0.9;
+  box-shadow: 0 4px 16px rgba(0,0,0,.14), 0 2px 6px rgba(0,0,0,.08);
+}
+
+.devlog-image-delete-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast);
+}
+.devlog-image-container:hover .devlog-image-delete-btn { display: flex; }
+.devlog-image-delete-btn:hover { background: var(--danger); }
+
+.devlog-image-confirm-row {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  gap: 4px;
+}
+
+.devlog-image-btn {
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 11px;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  transition: background var(--transition-fast);
+}
+.devlog-image-btn:hover { background: rgba(0, 0, 0, 0.7); }
+.devlog-image-btn--danger { background: var(--danger); }
+.devlog-image-btn--danger:hover { background: var(--danger-hover); }
+
+/* ── 图片放大灯箱 ───────────────────────────────────────────────── */
+.devlog-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 400;
+  cursor: zoom-out;
+  animation: fadeIn 0.15s ease;
+}
+
+.devlog-zoom-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  cursor: default;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Toast 气泡 ──────────────────────────────────────────────────── */
+.devlog-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  background: rgba(30, 30, 40, 0.92);
+  color: #fff;
+  padding: 7px 18px;
+  border-radius: 100px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: fadeIn 0.15s ease;
+}
+
+/* ── 链接面板（分界线下方，横向滚动） ──────────────────────────── */
+.note-modal-links-panel {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  min-height: 42px;
+}
+.note-modal-links-panel::-webkit-scrollbar { height: 3px; }
+.note-modal-links-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.note-modal-link-item {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.note-modal-link-capsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid;
+  border-radius: 100px;
+  padding: 4px 7px 4px 10px;
+  font-size: 13px;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  white-space: nowrap;
+  max-width: 280px;
+  transition: opacity var(--transition-fast);
+}
+.note-modal-link-capsule:hover { opacity: 0.78; }
+
+.note-modal-link-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 190px;
+}
+
+/* 胶囊内编辑按钮 */
+.note-modal-link-edit-trigger {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.18);
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
+}
+.note-modal-link-capsule:hover .note-modal-link-edit-trigger { opacity: 1; }
+.note-modal-link-edit-trigger:hover { background: rgba(255, 255, 255, 0.3); }
+
+/* ── 行内编辑表单 ───────────────────────────────────────────── */
+.note-modal-link-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 5px 8px;
+  flex-shrink: 0;
+  animation: fadeIn 0.1s ease;
+}
+
+.note-modal-link-edit-row2 {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.note-modal-link-form {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 5px 8px;
+  flex-shrink: 0;
+  animation: fadeIn 0.1s ease;
+}
+
+.note-modal-link-form-row1 {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.note-modal-link-form-row2 {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.note-modal-link-url-input,
+.note-modal-link-label-input {
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-root);
+  color: var(--text);
+  font-size: 12px;
+  font-family: var(--font-ui);
+  outline: none;
+  transition: border var(--transition-fast);
+}
+.note-modal-link-form .note-modal-link-url-input { width: 180px; }
+.note-modal-link-form .note-modal-link-label-input { width: 120px; }
+.note-modal-link-edit-form .note-modal-link-url-input { width: 100%; }
+.note-modal-link-edit-form .note-modal-link-label-input { width: 100%; }
+.note-modal-link-url-input:focus,
+.note-modal-link-label-input:focus { border-color: var(--border-focus); }
+
+.note-modal-link-colors {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.note-modal-link-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+.note-modal-link-color-dot:hover { transform: scale(1.2); }
+.note-modal-link-color-dot.selected {
+  border-color: var(--bg-surface);
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+.note-modal-link-confirm-btn {
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+}
+.note-modal-link-confirm-btn:hover { background: var(--accent-hover); }
+
+/* 自定义颜色按钮（与 TagEditModal 一致） */
+.note-modal-link-color-custom-wrap {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.note-modal-link-color-custom {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  cursor: pointer;
+  background: none;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.note-modal-link-color-custom::-webkit-color-swatch-wrapper { padding: 0; }
+.note-modal-link-color-custom::-webkit-color-swatch { border: none; border-radius: 50%; }
+.note-modal-link-color-custom-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* 行内编辑中的删除按钮 */
+.note-modal-link-delete-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.note-modal-link-delete-btn:hover { background: rgba(220, 38, 38, 0.1); color: var(--danger); }
+
+.note-modal-link-cancel-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+}
+.note-modal-link-cancel-btn:hover { background: var(--bg-hover); color: var(--text); }
+
+.note-modal-link-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 14px;
+  border-radius: 100px;
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+.note-modal-link-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── 图片面板（正文编辑底部，横向滚动） ────────────────────────── */
+.note-modal-images-panel {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-surface);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  min-height: 120px;
+}
+.note-modal-images-panel::-webkit-scrollbar { height: 3px; }
+.note-modal-images-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.note-modal-images-empty {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* ── 图片面板缩略图 ──────────────────────────────────────────────── */
+.note-panel-img-wrap {
+  position: relative;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  line-height: 0;
+}
+
+.note-panel-img-thumb {
+  display: block;
+  height: 156px;
+  width: auto;
+  max-width: 300px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  cursor: zoom-in;
+  border: 1px solid var(--border);
+  transition: opacity var(--transition-fast);
+}
+.note-panel-img-thumb:hover { opacity: 0.85; }
+
+.note-panel-img-loading {
+  width: 156px;
+  height: 156px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-sm);
+  animation: pulse 1.2s ease infinite;
+}
+
+.note-panel-img-delete {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast);
+}
+.note-panel-img-wrap:hover .note-panel-img-delete { display: flex; }
+.note-panel-img-delete:hover { background: var(--danger); }

@@ -1,0 +1,79 @@
+.setup-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: var(--bg-root);
+  animation: fadeIn 0.3s ease;
+}
+
+.setup-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 36px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  animation: slideUp 0.4s ease;
+}
+
+.setup-icon {
+  color: var(--accent);
+  opacity: 0.8;
+}
+
+.setup-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.setup-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.setup-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 28px;
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.setup-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.setup-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+
+.setup-error {
+  font-size: 12px;
+  color: var(--danger);
+}
+
+.setup-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}

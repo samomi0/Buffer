@@ -1,0 +1,118 @@
+import { create } from "zustand";
+
+/** 模块类别：builtin = 标准模块，custom = 定制模块 */
+export type ModuleKind = "builtin" | "custom";
+
+export interface ToolManifest {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  version: string;
+  /** 模块类别，用于区分标准模块与定制模块 */
+  kind: ModuleKind;
+}
+
+export interface RecentTool {
+  id: string;
+  openedAt: number;
+  pinned: boolean;
+}
+
+const RECENT_KEY = "buffer:recent";
+const MAX_RECENT = 12;
+
+function loadRecent(): RecentTool[] {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveRecent(list: RecentTool[]) {
+  localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+}
+
+export function normalizeTopbarToolIds(ids: string[], tools: ToolManifest[]): string[] {
+  const validIds = new Set(tools.map((tool) => tool.id));
+  const nextIds: string[] = [];
+
+  for (const id of ids) {
+    if (validIds.has(id) && !nextIds.includes(id)) {
+      nextIds.push(id);
+    }
+  }
+
+  return nextIds;
+}
+
+interface AppState {
+  tools: ToolManifest[];
+  searchQuery: string;
+  dataDir: string | null;
+  activeToolId: string | null;
+  recentTools: RecentTool[];
+  topbarToolIds: string[];
+
+  setTools: (tools: ToolManifest[]) => void;
+  setDataDir: (dir: string) => void;
+  setSearchQuery: (q: string) => void;
+  pushTool: (id: string) => void;
+  popTool: () => void;
+  togglePin: (id: string) => void;
+  setTopbarToolIds: (ids: string[]) => void;
+
+  // legacy aliases used by existing tool components
+  openTool: (id: string) => void;
+  closeTool: () => void;
+}
+
+export const useAppStore = create<AppState>((set, get) => ({
+  tools: [],
+  searchQuery: "",
+  dataDir: null,
+  activeToolId: null,
+  recentTools: loadRecent(),
+  topbarToolIds: [],
+
+  setTools: (tools) => set((state) => ({
+    tools,
+    topbarToolIds: normalizeTopbarToolIds(state.topbarToolIds, tools),
+  })),
+  setDataDir: (dir) => set({ dataDir: dir }),
+  setSearchQuery: (q) => set({ searchQuery: q }),
+
+  pushTool: (id) => {
+    const current = get();
+    const existing = current.recentTools.find((r) => r.id === id);
+    const entry: RecentTool = {
+      id,
+      openedAt: Date.now(),
+      pinned: existing?.pinned ?? false,
+    };
+    const without = current.recentTools.filter((r) => r.id !== id);
+    const pinned = [entry, ...without].filter((r) => r.pinned);
+    const nonPinned = [entry, ...without]
+      .filter((r) => !r.pinned)
+      .slice(0, MAX_RECENT);
+    const newRecent = [...pinned, ...nonPinned];
+    saveRecent(newRecent);
+    set({ activeToolId: id, searchQuery: "", recentTools: newRecent });
+  },
+
+  popTool: () => set({ activeToolId: null }),
+
+  togglePin: (id) => {
+    const newRecent = get().recentTools.map((r) =>
+      r.id === id ? { ...r, pinned: !r.pinned } : r
+    );
+    saveRecent(newRecent);
+    set({ recentTools: newRecent });
+  },
+
+  setTopbarToolIds: (ids) => set({ topbarToolIds: normalizeTopbarToolIds(ids, get().tools) }),
+
+  openTool: (id) => get().pushTool(id),
+  closeTool: () => get().popTool(),
+}));

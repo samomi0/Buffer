@@ -1,0 +1,126 @@
+.recent-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.recent-bar-label {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.recent-bar-list {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.recent-bar-list::-webkit-scrollbar {
+  display: none;
+}
+
+.recent-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px 4px 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-fast), border-color var(--transition-fast),
+    color var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.recent-chip:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-focus);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+}
+
+.recent-chip.pinned {
+  border-color: rgba(37, 99, 235, 0.25);
+  color: var(--text);
+}
+
+.recent-chip.pinned svg {
+  color: var(--accent);
+}
+
+.recent-chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+}
+
+.recent-chip-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.recent-chip-name {
+  font-weight: 500;
+}
+
+.recent-chip-time {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* Context menu */
+.recent-ctx-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+}
+
+.recent-ctx-menu {
+  position: fixed;
+  z-index: 201;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  min-width: 130px;
+  overflow: hidden;
+  animation: ctxFadeIn 0.12s ease;
+}
+
+.recent-ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.recent-ctx-item:hover {
+  background: var(--bg-hover);
+}
+
+@keyframes ctxFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
