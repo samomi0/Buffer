@@ -3,6 +3,8 @@ export interface DevlogTag {
   name: string;
   color: string;
   pinned?: boolean;
+  /** 关联的本地目录路径，用于快速在外部编辑器中打开 */
+  dir?: string;
 }
 
 export interface DevlogLink {

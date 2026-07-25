@@ -23,6 +23,7 @@ interface Props {
 export function TagEditModal({ tag, onSave, onDelete, onClose }: Props) {
   const [name, setName] = useState(tag?.name ?? "");
   const [color, setColor] = useState(tag?.color ?? randomColor());
+  const [dir, setDir] = useState(tag?.dir ?? "");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -46,6 +47,8 @@ export function TagEditModal({ tag, onSave, onDelete, onClose }: Props) {
       id: tag?.id ?? crypto.randomUUID(),
       name: trimmed,
       color,
+      pinned: tag?.pinned,
+      dir: dir.trim() || undefined,
     });
   }
 
@@ -100,6 +103,22 @@ export function TagEditModal({ tag, onSave, onDelete, onClose }: Props) {
                 {name || "预览效果"}
               </span>
             </div>
+
+            <div className="tag-modal-label">关联目录（可选）</div>
+            <div className="tag-modal-dir-row">
+              <input
+                className="tag-modal-input"
+                type="text"
+                value={dir}
+                onChange={(e) => setDir(e.target.value)}
+                placeholder="本地目录路径，如 D:\projects\myapp"
+              />
+            </div>
+            {dir.trim() && (
+              <p className="tag-modal-dir-hint">
+                侧栏将显示快捷打开按钮，使用设置中配置的编辑器打开此目录。
+              </p>
+            )}
           </div>
           <div className="tag-modal-footer">
             {tag && onDelete && (

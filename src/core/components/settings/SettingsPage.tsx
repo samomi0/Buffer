@@ -17,6 +17,11 @@ export function SettingsPage({ dataDir, onDataDirChange }: Props) {
   const [holidayYear, setHolidayYear] = useState(String(new Date().getFullYear()));
   const [topbarSaving, setTopbarSaving] = useState(false);
 
+  const devlogOpenCmd = useAppStore((s) => s.devlogOpenCmd);
+  const setDevlogOpenCmd = useAppStore((s) => s.setDevlogOpenCmd);
+  const [openCmdDraft, setOpenCmdDraft] = useState(devlogOpenCmd);
+  const [openCmdSaved, setOpenCmdSaved] = useState(false);
+
   const tools = useAppStore((s) => s.tools);
   const topbarToolIds = useAppStore((s) => s.topbarToolIds);
   const setTopbarToolIds = useAppStore((s) => s.setTopbarToolIds);
@@ -71,6 +76,19 @@ export function SettingsPage({ dataDir, onDataDirChange }: Props) {
       setError(String(e));
     } finally {
       setSelecting(false);
+    }
+  };
+
+  const handleSaveOpenCmd = async () => {
+    const cmd = openCmdDraft.trim() || "code";
+    setDevlogOpenCmd(cmd);
+    if (dataDir) {
+      try {
+        const settings = await readWorkbenchSettings(dataDir);
+        await writeWorkbenchSettings(dataDir, { ...settings, devlogOpenCmd: cmd });
+        setOpenCmdSaved(true);
+        setTimeout(() => setOpenCmdSaved(false), 2000);
+      } catch { /* ignore */ }
     }
   };
 
@@ -196,6 +214,35 @@ export function SettingsPage({ dataDir, onDataDirChange }: Props) {
                     {holidayMsg}
                   </p>
                 )}
+              </div>
+            </section>
+
+            <section className="settings-panel">
+              <div className="settings-panel-head compact">
+                <div>
+                  <h2>外部编辑器</h2>
+                  <p>开发手记标签的快速打开按钮使用的命令。</p>
+                </div>
+              </div>
+
+              <div className="settings-field-card">
+                <span className="settings-field-label">打开命令</span>
+                <div className="settings-field-row">
+                  <input
+                    className="settings-open-cmd-input"
+                    type="text"
+                    value={openCmdDraft}
+                    onChange={(e) => setOpenCmdDraft(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && void handleSaveOpenCmd()}
+                    placeholder="code"
+                  />
+                  <button className="settings-btn" onClick={() => void handleSaveOpenCmd()}>
+                    {openCmdSaved ? "已保存" : "保存"}
+                  </button>
+                </div>
+                <p className="settings-inline-message">
+                  常用值：<code>code</code>（VSCode）、<code>idea</code>（IntelliJ）、<code>subl</code>（Sublime）
+                </p>
               </div>
             </section>
           </aside>

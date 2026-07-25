@@ -106,6 +106,29 @@
   padding: 6px 8px;
 }
 
+/* 每个标签的关联目录快速打开按钮（始终占位，无目录时禁用） */
+.devlog-tag-open-btn {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast);
+  opacity: 0.35;
+}
+.devlog-tag-filter-row:hover .devlog-tag-open-btn { opacity: 1; }
+.devlog-tag-open-btn:not(:disabled):hover { background: var(--bg-hover); color: var(--accent); }
+.devlog-tag-open-btn:disabled {
+  opacity: 0.18;
+  cursor: not-allowed;
+}
+
 .devlog-archive-toggle-label {
   font-size: 12px;
   color: var(--text);
@@ -222,8 +245,8 @@
 
 .devlog-tag-pin-btn {
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   border-radius: var(--radius-sm);
   border: none;
   background: transparent;

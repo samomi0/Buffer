@@ -47,6 +47,7 @@ function App() {
   const setTools = useAppStore((s) => s.setTools);
   const setDataDir = useAppStore((s) => s.setDataDir);
   const setTopbarToolIds = useAppStore((s) => s.setTopbarToolIds);
+  const setDevlogOpenCmd = useAppStore((s) => s.setDevlogOpenCmd);
 
 
   const getDefaultTopbarToolIds = (items: ToolManifest[]) => items.map((tool) => tool.id);
@@ -88,6 +89,9 @@ function App() {
 
         if (!cancelled) {
           setTopbarToolIds(normalizedIds);
+          if (settings.devlogOpenCmd) {
+            setDevlogOpenCmd(settings.devlogOpenCmd);
+          }
         }
 
         if (JSON.stringify(settings.topbarToolIds ?? []) !== JSON.stringify(normalizedIds)) {

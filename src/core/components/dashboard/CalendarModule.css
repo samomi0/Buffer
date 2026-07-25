@@ -41,8 +41,29 @@
 .calendar-upcoming-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
+}
+
+.calendar-upcoming-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+/* 左侧小日历的标题行隐藏（右侧主日历顶部已统一显示） */
+.calendar-sidebar-card .calendar-sidebar-header {
+  display: none;
+}
+
+/* 隐藏后减少顶部内边距，让小日历网格直接从顶部开始 */
+.calendar-sidebar-card {
+  padding-top: 14px;
+}
+
+/* 无需再与标题头部保留间距 */
+.calendar-sidebar-card .calendar-mini-weekdays {
+  margin-top: 0;
 }
 
 .calendar-sidebar-header h3 {
@@ -184,6 +205,34 @@
   background: #ef4444;
 }
 
+/* ── 热力图：基于开发手记数量着色 ──────────────────────────────── */
+.calendar-mini-cell.heat-1 {
+  background: rgba(52, 211, 153, 0.26) !important;
+}
+
+.calendar-mini-cell.heat-2 {
+  background: rgba(16, 185, 129, 0.46) !important;
+}
+
+.calendar-mini-cell.heat-3 {
+  background: rgba(5, 150, 105, 0.64) !important;
+  color: #fff !important;
+}
+
+.calendar-mini-cell.heat-4 {
+  background: rgba(4, 120, 87, 0.82) !important;
+  color: #fff !important;
+}
+
+/* 热力今日：保留蓝色环提示 */
+.calendar-mini-cell.today.heat-1,
+.calendar-mini-cell.today.heat-2,
+.calendar-mini-cell.today.heat-3,
+.calendar-mini-cell.today.heat-4 {
+  box-shadow: 0 0 0 2px #2563eb;
+  font-weight: 600;
+}
+
 .calendar-upcoming {
   display: flex;
   flex-direction: column;
@@ -270,6 +319,48 @@
   padding-top: 14px;
 }
 
+/* ── 右侧日历顶部标题栏（与左侧小日历头部等高对齐） ─────────── */
+.calendar-main-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.calendar-main-top h3 {
+  color: #111827;
+  font-weight: 600;
+  font-size: 22px;
+}
+
+.calendar-main-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.calendar-main-nav button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.calendar-main-nav button:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
 .calendar-nav {
   display: none;
 }
@@ -309,8 +400,8 @@
 .calendar-month-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  border-top: 1px solid rgba(203, 213, 225, 0.82);
-  border-left: 1px solid rgba(203, 213, 225, 0.82);
+  border-top: 1px solid #bec9d4;
+  border-left: 1px solid #bec9d4;
   background: rgba(255, 255, 255, 0.68);
 }
 
@@ -323,8 +414,8 @@
   flex-direction: column;
   min-height: 112px;
   padding: 8px 8px 10px;
-  border-right: 1px solid rgba(203, 213, 225, 0.82);
-  border-bottom: 1px solid rgba(203, 213, 225, 0.82);
+  border-right: 1px solid #bec9d4;
+  border-bottom: 1px solid #bec9d4;
   background: rgba(255, 255, 255, 0.9);
   cursor: pointer;
   transition: background 0.18s ease;
@@ -445,6 +536,24 @@
 
 .event-orange {
   background: rgba(249, 115, 22, 0.16);
+}
+
+.event-purple {
+  background: rgba(139, 92, 246, 0.16);
+}
+
+.event-teal {
+  /* 改为鹿草绿，与 cyan 区分明显 */
+  background: rgba(132, 204, 22, 0.22);
+}
+
+.event-pink {
+  background: rgba(236, 72, 153, 0.16);
+}
+
+.event-cyan {
+  /* 改为琛珀黄/琥珀，与 teal 区分明显 */
+  background: rgba(251, 191, 36, 0.24);
 }
 
 /* 节假日：左侧蓝色条 + 淡蓝背景 */
@@ -573,7 +682,8 @@
 
 .calendar-color-row {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .calendar-color-dot {
@@ -670,6 +780,9 @@
 
 /* ── 富文本编辑器（备注） ──────────────────────────────────────── */
 .calendar-notes-label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
   flex: 1;
   min-height: 0;
 }
@@ -689,4 +802,113 @@
 .calendar-rich-editor .rich-editor-content .ProseMirror {
   font-size: 13px;
   padding: 10px 12px;
+}
+
+/* ── 周报灯箱 ──────────────────────────────────────────────────── */
+.weekly-report-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.22);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.18s ease;
+}
+
+.weekly-report-modal {
+  width: min(680px, calc(100vw - 32px));
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.20);
+  overflow: hidden;
+}
+
+.weekly-report-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+
+.weekly-report-title-block h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.weekly-report-range {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 3px;
+  display: block;
+}
+
+.weekly-report-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.weekly-report-copy-btn {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  background: rgba(59, 130, 246, 0.06);
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.weekly-report-copy-btn:hover {
+  background: rgba(59, 130, 246, 0.12);
+}
+.weekly-report-copy-btn.copied {
+  background: rgba(16, 185, 129, 0.10);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #059669;
+}
+
+.weekly-report-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+.weekly-report-close-btn:hover { background: rgba(148, 163, 184, 0.14); }
+
+.weekly-report-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px 20px;
+}
+
+.weekly-report-markdown {
+  margin: 0;
+  font-family: var(--font-ui), "SF Mono", "Cascadia Code", "Consolas", monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #1e293b;
+  white-space: pre-wrap;
+  word-break: break-word;
 }

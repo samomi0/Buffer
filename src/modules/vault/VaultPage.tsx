@@ -70,7 +70,7 @@ export function VaultPage() {
   const [showPwdChange, setShowPwdChange] = useState(false);
   const [newPwd, setNewPwd] = useState("");
 
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [tagFilters, setTagFilters] = useState<Record<string, "include" | "exclude">>({});
   const [pinnedTags, setPinnedTags] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("vault-pinned-tags") ?? "[]"); }
     catch { return []; }
@@ -81,10 +81,6 @@ export function VaultPage() {
   const [editingEntry, setEditingEntry] = useState<VaultEntry | null | "new">(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const searchTokens = useMemo(() => parseSearchTokens(searchQuery), [searchQuery]);
-  const activeTags = useMemo(
-    () => Array.from(new Set([...selectedTags, ...searchTokens.tags])),
-    [selectedTags, searchTokens.tags]
-  );
 
   // ── Init ─────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -242,15 +238,19 @@ export function VaultPage() {
     await persist(newVault, cryptoKey!);
   }
 
-  function toggleTag(tag: string | null) {
-    if (tag === null) {
-      setSelectedTags([]);
-      return;
-    }
+  function handleTagFilterChange(tag: string) {
+    setTagFilters((prev) => {
+      const cur = prev[tag];
+      const next = { ...prev };
+      if (cur === undefined) next[tag] = "include";
+      else if (cur === "include") next[tag] = "exclude";
+      else delete next[tag];
+      return next;
+    });
+  }
 
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((item) => item !== tag) : [...prev, tag]
-    );
+  function handleResetTagFilters() {
+    setTagFilters({});
   }
 
   // ── Filtered entries ─────────────────────────────────────────────────────
@@ -259,9 +259,28 @@ export function VaultPage() {
     if (selectedType) {
       list = list.filter((e) => e.type === selectedType);
     }
-    if (activeTags.length > 0) {
-      list = list.filter((e) => activeTags.some((tag) => e.tags.includes(tag)));
+
+    // include/exclude tag filters from sidebar
+    const includeFromFilters = Object.entries(tagFilters)
+      .filter(([, s]) => s === "include").map(([t]) => t);
+    const excludeFromFilters = Object.entries(tagFilters)
+      .filter(([, s]) => s === "exclude").map(([t]) => t);
+    // search bar tags are always "include" additions
+    const searchTags = searchTokens.tags;
+
+    if (includeFromFilters.length > 0 || excludeFromFilters.length > 0 || searchTags.length > 0) {
+      list = list.filter((e) => {
+        for (const tag of excludeFromFilters) {
+          if (e.tags.includes(tag)) return false;
+        }
+        const allIncludes = [...includeFromFilters, ...searchTags];
+        for (const tag of allIncludes) {
+          if (!e.tags.includes(tag)) return false;
+        }
+        return true;
+      });
     }
+
     if (searchTokens.text.trim()) {
       const q = searchTokens.text.toLowerCase();
       list = list.filter((e) => {
@@ -274,7 +293,7 @@ export function VaultPage() {
       });
     }
     return list;
-  }, [vault.entries, selectedType, activeTags, searchTokens.text]);
+  }, [vault.entries, selectedType, tagFilters, searchTokens]);
 
   const tagCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -316,13 +335,14 @@ export function VaultPage() {
       <div className="vault-body">
         <TagSidebar
           tags={vault.tags}
-          selected={activeTags}
+          tagFilters={tagFilters}
           selectedType={selectedType}
           pinnedTags={pinnedTags}
           counts={tagCounts}
           typeCounts={typeCounts}
           total={vault.entries.length}
-          onSelect={toggleTag}
+          onTagFilterChange={handleTagFilterChange}
+          onResetTagFilters={handleResetTagFilters}
           onSelectType={setSelectedType}
           onTogglePin={(tag) => {
             const next = pinnedTags.includes(tag)
@@ -341,7 +361,7 @@ export function VaultPage() {
           onNew={() => setEditingEntry("new")}
           onImport={() => setShowImportModal(true)}
           onChangePassword={() => { setShowPwdChange(true); setNewPwd(""); }}
-          onLock={() => { clearPassword(); setCryptoKey(null); setVault(EMPTY_VAULT); setSelectedId(null); setSearchQuery(""); setSelectedTags([]); setSelectedType(null); setPinnedTags([]); setInitPhase("lock-screen"); }}
+          onLock={() => { clearPassword(); setCryptoKey(null); setVault(EMPTY_VAULT); setSelectedId(null); setSearchQuery(""); setTagFilters({}); setSelectedType(null); setPinnedTags([]); setInitPhase("lock-screen"); }}
           saving={saving}
         />
       </div>
@@ -352,7 +372,7 @@ export function VaultPage() {
           onClose={() => setSelectedId(null)}
           onEdit={() => setEditingEntry(selectedEntry)}
           onDelete={handleDeleteEntry}
-          onFilterTag={(tag) => toggleTag(tag)}
+          onFilterTag={(tag) => handleTagFilterChange(tag)}
         />
       )}
 

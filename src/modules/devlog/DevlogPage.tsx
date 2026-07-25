@@ -19,6 +19,8 @@ function initialContent(): object {
 export function DevlogPage() {
   const closeTool = useAppStore((s) => s.closeTool);
   const dataDir = useAppStore((s) => s.dataDir)!;
+  const devlogDateFilter = useAppStore((s) => s.devlogDateFilter);
+  const setDevlogDateFilter = useAppStore((s) => s.setDevlogDateFilter);
 
   /* ── Ctrl+K 返回 ─────────────────────────────────────────── */
   useEffect(() => {
@@ -162,6 +164,15 @@ export function DevlogPage() {
     setTags(newTags);
     await saveTags(dataDir, newTags);
   }
+
+  /* ── 由日历热力图传入的日期筛选 ─────────────────────────────── */
+  useEffect(() => {
+    if (!devlogDateFilter) return;
+    setTimeFilter({ type: "custom", from: devlogDateFilter, to: devlogDateFilter });
+    setCustomFrom(devlogDateFilter);
+    setCustomTo(devlogDateFilter);
+    setDevlogDateFilter(null);
+  }, [devlogDateFilter, setDevlogDateFilter]);
 
   /* ── 重置所有筛选条件 ─────────────────────────────────────── */
   const handleResetFilters = useCallback(() => {

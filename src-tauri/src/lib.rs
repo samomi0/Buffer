@@ -318,6 +318,27 @@ fn uuid_v4() -> String {
 
 // ── Calendar 命令 ─────────────────────────────────────────────────
 
+/// 使用指定命令打开目录（默认 code，可在设置中更改）
+#[tauri::command]
+fn open_dir_with_cmd(path: String, cmd: String) -> Result<(), String> {
+    let effective = if cmd.trim().is_empty() { "code".to_string() } else { cmd.trim().to_string() };
+
+    // Windows 上 code 安装为 code.cmd，需要通过 cmd.exe /C 转指才能找到
+    #[cfg(target_os = "windows")]
+    let spawn_result = std::process::Command::new("cmd")
+        .args(["/C", &effective, &path])
+        .spawn();
+
+    #[cfg(not(target_os = "windows"))]
+    let spawn_result = std::process::Command::new(&effective)
+        .arg(&path)
+        .spawn();
+
+    spawn_result
+        .map(|_| ())
+        .map_err(|e| format!("无法启动 {}: {}", effective, e))
+}
+
 #[tauri::command]
 async fn fetch_holidays(year: String) -> Result<String, String> {
     let url = format!("https://api.apisbo.com/holidays/year/{}", year);
@@ -406,7 +427,8 @@ pub fn run() {
             read_workbench_settings,
             write_workbench_settings,
             read_calendar_events,
-            write_calendar_events
+            write_calendar_events,
+            open_dir_with_cmd
         ])
         .setup(|_app| {
             // 注释掉自动打开 DevTools，避免每次 tauri dev 都弹出 F12 控制台

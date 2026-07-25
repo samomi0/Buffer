@@ -6,7 +6,7 @@ import { RichTextEditor } from "../../components/RichTextEditor";
 import { plainTextToTipTapJSON, tipTapToPlainText, isTipTapDoc } from "../../lib/richTextMigration";
 import "./CalendarModule.css";
 
-type EventColor = "red" | "blue" | "green" | "orange" | "holiday" | "workday";
+type EventColor = "red" | "blue" | "green" | "orange" | "purple" | "teal" | "pink" | "cyan" | "holiday" | "workday";
 
 type CalendarEvent = {
   id: string;
@@ -54,13 +54,15 @@ const MONTH_NAMES = [
   "一月", "二月", "三月", "四月", "五月", "六月",
   "七月", "八月", "九月", "十月", "十一月", "十二月",
 ];
-const EVENT_COLORS: EventColor[] = ["blue", "green", "orange", "red"];
+const EVENT_COLORS: EventColor[] = ["blue", "green", "orange", "red", "purple", "teal", "pink", "cyan"];
 const MONTH_WINDOW_BEFORE = 3;
 const MONTH_WINDOW_AFTER = 5;
 const MAX_CELL_EVENTS = 3;
 
 export function CalendarModule() {
   const dataDir = useAppStore((s) => s.dataDir);
+  const pushTool = useAppStore((s) => s.pushTool);
+  const setDevlogDateFilter = useAppStore((s) => s.setDevlogDateFilter);
 
   // today 每分钟刷新一次，保证跨夜后日期与倒计时正确
   const [today, setToday] = useState(() => startOfDay(new Date()));
@@ -77,6 +79,14 @@ export function CalendarModule() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [devlogCounts, setDevlogCounts] = useState<Record<string, number>>({});
+  const [devlogNotes, setDevlogNotes] = useState<{
+    id: string; title: string; content: object;
+    tags: string[]; createdAt: string; archived?: boolean;
+  }[]>([]);
+  const [devlogTagMap, setDevlogTagMap] = useState<Record<string, string>>({});
+  const [weeklyReportOpen, setWeeklyReportOpen] = useState(false);
+  const [reportCopied, setReportCopied] = useState(false);
   const [months, setMonths] = useState(() =>
     createMonthWindow(initialMonth, MONTH_WINDOW_BEFORE, MONTH_WINDOW_AFTER)
   );
@@ -127,6 +137,29 @@ export function CalendarModule() {
       }
     }
     doSync();
+  }, [dataDir]);
+
+  // 加载开发手记（计数用于热力图，全量用于周报）
+  useEffect(() => {
+    if (!dataDir) return;
+    Promise.all([
+      invoke<string>("list_devlog_notes", { dataDir }),
+      invoke<string>("read_devlog_tags", { dataDir }),
+    ]).then(([notesRaw, tagsRaw]) => {
+      const notes = JSON.parse(notesRaw) as { id: string; title: string; content: object; tags: string[]; createdAt?: string; archived?: boolean }[];
+      const tagsArr = JSON.parse(tagsRaw) as { id: string; name: string }[];
+      const validNotes = Array.isArray(notes) ? notes.filter(n => n.createdAt) : [];
+      setDevlogNotes(validNotes as typeof devlogNotes);
+      const tagMap: Record<string, string> = {};
+      if (Array.isArray(tagsArr)) tagsArr.forEach(t => { tagMap[t.id] = t.name; });
+      setDevlogTagMap(tagMap);
+      const counts: Record<string, number> = {};
+      for (const note of validNotes) {
+        const key = note.createdAt!.slice(0, 10);
+        counts[key] = (counts[key] ?? 0) + 1;
+      }
+      setDevlogCounts(counts);
+    }).catch(() => {});
   }, [dataDir]);
 
   const monthSections = useMemo(
@@ -393,6 +426,8 @@ export function CalendarModule() {
               const isToday = key === todayKey;
               const inMonth = date.getMonth() === focusMonth.getMonth();
               const hasEvents = events.some((event) => overlapsDay(event, key));
+              const noteCount = inMonth ? (devlogCounts[key] ?? 0) : 0;
+              const heatLevel = noteCount === 0 ? 0 : noteCount === 1 ? 1 : noteCount === 2 ? 2 : noteCount <= 3 ? 3 : 4;
               return (
                 <button
                   key={key}
@@ -402,8 +437,16 @@ export function CalendarModule() {
                     isToday ? "today" : "",
                     date.getDay() === 0 ? "weekend-sunday" : "",
                     date.getDay() === 6 ? "weekend-saturday" : "",
+                    inMonth && heatLevel > 0 ? `heat-${heatLevel}` : "",
                   ].join(" ").trim()}
-                  onClick={() => scrollToMonth(date)}
+                  onClick={() => {
+                    scrollToMonth(date);
+                    if (noteCount > 0) {
+                      pushTool("DevLog");
+                      setDevlogDateFilter(key);
+                    }
+                  }}
+                  title={inMonth && noteCount > 0 ? `${noteCount} 条开发手记` : undefined}
                 >
                   <span>{date.getDate()}</span>
                   {hasEvents && <i />}
@@ -416,13 +459,22 @@ export function CalendarModule() {
         <div className="calendar-upcoming frosted">
           <div className="calendar-upcoming-head">
             <h3>最近事件</h3>
-            <button
-              className="calendar-upcoming-add"
-              onClick={() => openCreateEditor(todayKey)}
-              title="新建事件"
-            >
-              <PlusIcon />
-            </button>
+            <div className="calendar-upcoming-btn-group">
+              <button
+                className="calendar-upcoming-add"
+                onClick={() => setWeeklyReportOpen(true)}
+                title="查看本周周报"
+              >
+                <WeeklyReportIcon />
+              </button>
+              <button
+                className="calendar-upcoming-add"
+                onClick={() => openCreateEditor(todayKey)}
+                title="新建事件"
+              >
+                <PlusIcon />
+              </button>
+            </div>
           </div>
 
           <div className="calendar-upcoming-list">
@@ -449,6 +501,21 @@ export function CalendarModule() {
       </aside>
 
       <div className="calendar-main frosted">
+        <div className="calendar-main-top">
+          <h3>{formatFullDate(today)}</h3>
+          <div className="calendar-main-nav">
+            <button onClick={() => scrollToMonth(addMonths(focusMonth, -1))} title="上个月">
+              <ChevronLeft />
+            </button>
+            <button onClick={() => scrollToMonth(today)} title="今天">
+              <TodayIcon />
+            </button>
+            <button onClick={() => scrollToMonth(addMonths(focusMonth, 1))} title="下个月">
+              <ChevronRight />
+            </button>
+          </div>
+        </div>
+
         <div className="calendar-grid-weekdays">
           {WEEKDAY_LABELS.map((day, index) => (
             <div
@@ -589,17 +656,18 @@ export function CalendarModule() {
                 </div>
               </label>
 
-              <label className="calendar-notes-label">
+              <div className="calendar-notes-label">
                 <span>备注</span>
                 <div className="calendar-rich-editor">
                   <RichTextEditor
+                    key={editor.draft.id ?? "new"}
                     initialContent={editor.draft.notes as object}
                     onChange={(json) => updateDraft("notes", json as EventDraft["notes"])}
                     placeholder="可选备注…"
                     hideLinkToolbar
                   />
                 </div>
-              </label>
+              </div>
 
               {saveError && <div className="calendar-error">{saveError}</div>}
             </div>
@@ -620,6 +688,46 @@ export function CalendarModule() {
           </div>
         </div>
       )}
+
+      {weeklyReportOpen && (() => {
+        const [weekStart, weekEnd] = getWeekRange(today);
+        const reportText = buildWeeklyReport(devlogNotes, devlogTagMap, weekStart, weekEnd);
+
+        return (
+          <div className="weekly-report-backdrop" onClick={() => setWeeklyReportOpen(false)}>
+            <div className="weekly-report-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="weekly-report-header">
+                <div className="weekly-report-title-block">
+                  <h2>本周工作周报</h2>
+                  <span className="weekly-report-range">
+                    {formatFullDate(weekStart)} ~ {formatFullDate(weekEnd)}
+                  </span>
+                </div>
+                <div className="weekly-report-actions">
+                  <button
+                    className={`weekly-report-copy-btn ${reportCopied ? "copied" : ""}`}
+                    onClick={() => {
+                      navigator.clipboard.writeText(reportText).then(() => {
+                        setReportCopied(true);
+                        setTimeout(() => setReportCopied(false), 2000);
+                      });
+                    }}
+                  >
+                    {reportCopied ? "✓ 已复制" : "复制"}
+                  </button>
+                  <button className="weekly-report-close-btn" onClick={() => setWeeklyReportOpen(false)}>
+                    <CloseIcon />
+                  </button>
+                </div>
+              </div>
+
+              <div className="weekly-report-body">
+                <pre className="weekly-report-markdown">{reportText}</pre>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </section>
   );
 }
@@ -779,6 +887,13 @@ function addMonths(date: Date, offset: number) {
   return new Date(date.getFullYear(), date.getMonth() + offset, 1);
 }
 
+function formatFullDate(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}年${m}月${d}日`;
+}
+
 function formatDateKey(date: Date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -858,4 +973,67 @@ function PlusIcon() {
       <path d="M12 6v12M6 12h12" />
     </svg>
   );
+}
+
+function WeeklyReportIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M8 2v4M16 2v4" />
+      <path d="M8 12h5M8 16h8" />
+    </svg>
+  );
+}
+
+/* ── 周报工具函数 ──────────────────────────────────────────────── */
+
+function getWeekRange(date: Date): [Date, Date] {
+  const dow = date.getDay(); // 0 = 周日
+  const mondayOffset = dow === 0 ? 6 : dow - 1;
+  const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate() - mondayOffset);
+  const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
+  return [monday, sunday];
+}
+
+function buildWeeklyReport(
+  notes: { id: string; title: string; content: object; tags: string[]; createdAt?: string; archived?: boolean }[],
+  tagMap: Record<string, string>,
+  weekStart: Date,
+  weekEnd: Date
+): string {
+  const weekNotes = notes
+    .filter(n => {
+      if (n.archived || !n.createdAt) return false;
+      const d = parseDateKey(n.createdAt.slice(0, 10));
+      return d >= weekStart && d <= weekEnd;
+    })
+    .sort((a, b) => a.createdAt!.localeCompare(b.createdAt!));
+
+  if (weekNotes.length === 0) {
+    return `# 本周工作周报\n\n${formatFullDate(weekStart)} ~ ${formatFullDate(weekEnd)}\n\n_本周暂无开发手记记录_`;
+  }
+
+  const header = `# 本周工作周报\n\n${formatFullDate(weekStart)} ~ ${formatFullDate(weekEnd)}\n> 共记录 **${weekNotes.length}** 条开发手记\n`;
+
+  const byDate: Record<string, typeof weekNotes> = {};
+  for (const note of weekNotes) {
+    const dk = note.createdAt!.slice(0, 10);
+    if (!byDate[dk]) byDate[dk] = [];
+    byDate[dk].push(note);
+  }
+
+  let body = '\n---\n';
+  for (const [dk, dNotes] of Object.entries(byDate)) {
+    body += `\n## ${formatFullDate(parseDateKey(dk))}\n\n`;
+    for (const note of dNotes) {
+      const tagNames = note.tags.map(id => tagMap[id]).filter(Boolean);
+      if (tagNames.length > 0) body += `\`${tagNames.join('` `')}\` `;
+      body += `**${note.title}**\n\n`;
+      const text = tipTapToPlainText(note.content);
+      if (text.trim()) body += `> ${text.trim()}\n\n`;
+    }
+    body += '---\n';
+  }
+
+  return header + body;
 }

@@ -135,6 +135,55 @@
   padding: 0 5px 4px;
 }
 
+/* 标题行（含重置按钮）*/
+.vault-sidebar-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5px 4px;
+}
+
+.vault-sidebar-title-row .vault-sidebar-title {
+  padding: 0;
+}
+
+.vault-reset-tag-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+.vault-reset-tag-btn:hover {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+/* include/exclude 状态 */
+.vault-tag-item--filter { cursor: pointer; }
+.vault-tag-item--include { background: var(--accent-dim) !important; color: var(--accent) !important; }
+.vault-tag-item--exclude { background: rgba(220, 38, 38, 0.07) !important; color: var(--danger) !important; }
+
+.vault-tag-state-badge {
+  font-size: 10px;
+  font-weight: 700;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.vault-tag-state-badge--include { background: var(--accent); color: #fff; }
+.vault-tag-state-badge--exclude { background: var(--danger); color: #fff; }
+
 .vault-tag-row {
   display: flex;
   align-items: stretch;

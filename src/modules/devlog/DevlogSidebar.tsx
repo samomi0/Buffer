@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { useAppStore } from "../../core/stores/appStore";
 import type { DevlogNote, DevlogTag, TimeFilter } from "./devlog.types";
 import { getDateRange } from "./devlog.types";
 import { TagEditModal } from "./TagEditModal";
@@ -35,6 +37,7 @@ export function DevlogSidebar({
   onResetFilters,
 }: Props) {
   const [editingTag, setEditingTag] = useState<DevlogTag | null | "new">(null);
+  const devlogOpenCmd = useAppStore((s) => s.devlogOpenCmd);
 
   const totalActive = notes.filter((n) => !n.archived).length;
   const totalArchived = notes.filter((n) => n.archived).length;
@@ -50,6 +53,13 @@ export function DevlogSidebar({
       }
       return true;
     }).length;
+  }
+
+  function handleOpenTagDir(tag: DevlogTag) {
+    if (!tag.dir) return;
+    invoke("open_dir_with_cmd", { path: tag.dir, cmd: devlogOpenCmd }).catch((err) => {
+      console.error("[DevlogSidebar] open_dir_with_cmd failed:", err);
+    });
   }
 
   return (
@@ -107,6 +117,18 @@ export function DevlogSidebar({
                 {state === "exclude" && (
                   <span className="devlog-tag-state-badge devlog-tag-state-badge--exclude">−</span>
                 )}
+              </button>
+              <button
+                className="devlog-tag-open-btn"
+                onClick={() => tag.dir && handleOpenTagDir(tag)}
+                disabled={!tag.dir}
+                title={tag.dir ? `在编辑器中打开: ${tag.dir}` : "右键标签可配置目录"}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
               </button>
               <button
                 className={`devlog-tag-pin-btn ${tag.pinned ? "devlog-tag-pin-btn--active" : ""}`}

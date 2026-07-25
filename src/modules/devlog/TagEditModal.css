@@ -134,6 +134,19 @@
   gap: 6px;
 }
 
+.tag-modal-dir-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag-modal-dir-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
 .tag-modal-footer {
   display: flex;
   align-items: center;

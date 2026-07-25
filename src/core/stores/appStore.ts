@@ -54,6 +54,9 @@ interface AppState {
   activeToolId: string | null;
   recentTools: RecentTool[];
   topbarToolIds: string[];
+  /** 开发手记标签快速打开使用的命令（默认 code，如 idea、subl） */
+  devlogOpenCmd: string;
+  setDevlogOpenCmd: (cmd: string) => void;
 
   setTools: (tools: ToolManifest[]) => void;
   setDataDir: (dir: string) => void;
@@ -62,6 +65,7 @@ interface AppState {
   popTool: () => void;
   togglePin: (id: string) => void;
   setTopbarToolIds: (ids: string[]) => void;
+  setDevlogDateFilter: (date: string | null) => void;
 
   // legacy aliases used by existing tool components
   openTool: (id: string) => void;
@@ -75,6 +79,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   activeToolId: null,
   recentTools: loadRecent(),
   topbarToolIds: [],
+  devlogDateFilter: null,
+  devlogOpenCmd: "code",
 
   setTools: (tools) => set((state) => ({
     tools,
@@ -112,6 +118,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   setTopbarToolIds: (ids) => set({ topbarToolIds: normalizeTopbarToolIds(ids, get().tools) }),
+
+  setDevlogDateFilter: (date) => set({ devlogDateFilter: date }),
+  setDevlogOpenCmd: (cmd) => set({ devlogOpenCmd: cmd }),
 
   openTool: (id) => get().pushTool(id),
   closeTool: () => get().popTool(),
