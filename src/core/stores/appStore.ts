@@ -54,6 +54,8 @@ interface AppState {
   activeToolId: string | null;
   recentTools: RecentTool[];
   topbarToolIds: string[];
+  /** 从日历热力图传入的日期过滤值 */
+  devlogDateFilter: string | null;
   /** 开发手记标签快速打开使用的命令（默认 code，如 idea、subl） */
   devlogOpenCmd: string;
   setDevlogOpenCmd: (cmd: string) => void;
