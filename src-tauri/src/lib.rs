@@ -324,10 +324,16 @@ fn open_dir_with_cmd(path: String, cmd: String) -> Result<(), String> {
     let effective = if cmd.trim().is_empty() { "code".to_string() } else { cmd.trim().to_string() };
 
     // Windows 上 code 安装为 code.cmd，需要通过 cmd.exe /C 转指才能找到
+    // 使用 CREATE_NO_WINDOW 防止 cmd 黑窗口出现并驻留
     #[cfg(target_os = "windows")]
-    let spawn_result = std::process::Command::new("cmd")
-        .args(["/C", &effective, &path])
-        .spawn();
+    let spawn_result = {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        std::process::Command::new("cmd")
+            .args(["/C", &effective, &path])
+            .creation_flags(CREATE_NO_WINDOW)
+            .spawn()
+    };
 
     #[cfg(not(target_os = "windows"))]
     let spawn_result = std::process::Command::new(&effective)
