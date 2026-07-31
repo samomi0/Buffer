@@ -2,10 +2,12 @@ import { useState, useMemo, useEffect } from "react";
 import type { DevlogNote, DevlogTag } from "./devlog.types";
 import { TimeFilter, getDateRange, timeFilterLabel, TIME_OPTIONS } from "./devlog.types";
 import { NoteCard } from "./NoteCard";
+import type { DevlogProgress } from "../../core/stores/appStore";
 
 interface Props {
   notes: DevlogNote[];
   tags: DevlogTag[];
+  progressList: DevlogProgress[];
   showArchived: boolean;
   timeFilter: TimeFilter;
   onTimeFilterChange: (filter: TimeFilter) => void;
@@ -16,6 +18,7 @@ interface Props {
   onOpenNote: (note: DevlogNote) => void;
   onArchiveNote: (id: string) => void;
   onDeleteNote: (id: string) => void;
+  onProgressChange: (noteId: string, progressId: string | undefined) => void;
   onNewNote: () => void;
 }
 
@@ -30,9 +33,9 @@ function extractText(content: object): string {
 
 /* ── Component ───────────────────────────────────────────────── */
 export function NoteGrid({
-  notes, tags, showArchived,
+  notes, tags, progressList, showArchived,
   timeFilter, onTimeFilterChange, customFrom, onCustomFromChange, customTo, onCustomToChange,
-  onOpenNote, onArchiveNote, onDeleteNote, onNewNote,
+  onOpenNote, onArchiveNote, onDeleteNote, onProgressChange, onNewNote,
 }: Props) {
   const [search, setSearch] = useState("");
 
@@ -145,9 +148,11 @@ export function NoteGrid({
             key={note.id}
             note={note}
             tags={tags}
+            progressList={progressList}
             onClick={() => onOpenNote(note)}
             onArchive={() => onArchiveNote(note.id)}
             onDelete={() => onDeleteNote(note.id)}
+            onProgressChange={(pid) => onProgressChange(note.id, pid)}
           />
         ))}
         {/* New note placeholder */}

@@ -1003,7 +1003,7 @@ function buildWeeklyReport(
 ): string {
   const weekNotes = notes
     .filter(n => {
-      if (n.archived || !n.createdAt) return false;
+      if (!n.createdAt) return false;
       const d = parseDateKey(n.createdAt.slice(0, 10));
       return d >= weekStart && d <= weekEnd;
     })

@@ -32,6 +32,7 @@ export interface DevlogNote {
   createdAt: string;
   updatedAt: string;
   archived: boolean;
+  progressId?: string;
 }
 
 export type TimeFilter =

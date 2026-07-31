@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { DevlogNote, DevlogTag, DevlogLink } from "./devlog.types";
+import type { DevlogProgress } from "../../core/stores/appStore";
 import { DevlogEditor } from "./DevlogEditor";
 import { DevlogNodeCtxProvider } from "./DevlogImageNode";
 import { saveDevlogImage, loadDevlogImage } from "./useDevlog";
@@ -114,6 +115,7 @@ function ImagePanelThumb({
 interface Props {
   note: DevlogNote;
   allTags: DevlogTag[];
+  progressList?: DevlogProgress[];
   dataDir: string;
   onUpdate: (note: DevlogNote) => void;
   onDelete: () => void;
@@ -122,7 +124,7 @@ interface Props {
 
 type SaveState = "saved" | "saving" | "error";
 
-export function NoteEditModal({ note, allTags, dataDir, onUpdate, onDelete, onClose }: Props) {
+export function NoteEditModal({ note, allTags, progressList, dataDir, onUpdate, onDelete, onClose }: Props) {
   // ── 初始化：迁移旧笔记中内嵌的链接和图片 ──────────────────────
   const [localNote, setLocalNote] = useState<DevlogNote>(() => {
     if (note.links !== undefined || note.images !== undefined) {
@@ -149,6 +151,8 @@ export function NoteEditModal({ note, allTags, dataDir, onUpdate, onDelete, onCl
   const [editLinkUrl, setEditLinkUrl] = useState("");
   const [editLinkLabel, setEditLinkLabel] = useState("");
   const [editLinkColor, setEditLinkColor] = useState(LINK_COLORS[0]);
+  const [isEditorFullscreen, setIsEditorFullscreen] = useState(false);
+  const [showProgressPicker, setShowProgressPicker] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* ── 迁移完成后立即保存 ─────────────────────────────────────── */
@@ -180,6 +184,8 @@ export function NoteEditModal({ note, allTags, dataDir, onUpdate, onDelete, onCl
     function onKey(e: KeyboardEvent) {
       if (e.key !== "Escape") return;
       if (zoomSrc) { setZoomSrc(null); return; }
+      if (isEditorFullscreen) { setIsEditorFullscreen(false); return; }
+      if (showProgressPicker) { setShowProgressPicker(false); return; }
       if (editingLinkId) { setEditingLinkId(null); return; }
       if (showAddLink) { setShowAddLink(false); return; }
       if (showTagPicker) { setShowTagPicker(false); return; }
@@ -189,7 +195,7 @@ export function NoteEditModal({ note, allTags, dataDir, onUpdate, onDelete, onCl
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, zoomSrc, editingLinkId, showAddLink, showTagPicker, editingDate, confirmDelete]);
+  }, [onClose, zoomSrc, isEditorFullscreen, showProgressPicker, editingLinkId, showAddLink, showTagPicker, editingDate, confirmDelete]);
 
   /* ── 防抖自动保存 ────────────────────────────────────────── */
   const scheduleAutosave = useCallback(
@@ -348,7 +354,7 @@ export function NoteEditModal({ note, allTags, dataDir, onUpdate, onDelete, onCl
     <div
       className="note-modal-overlay"
     >
-      <div className="note-modal" onPaste={handleModalPaste}>
+      <div className={`note-modal${isEditorFullscreen ? " note-modal--fullscreen" : ""}`} onPaste={handleModalPaste}>
         {/* ── 弹窗头部 ─────────────────────────────────────── */}
         <div className="note-modal-header">
           <div className="note-modal-row1">
@@ -443,6 +449,60 @@ export function NoteEditModal({ note, allTags, dataDir, onUpdate, onDelete, onCl
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                   </svg>
                 </button>
+              )}
+
+              {/* 进度状态按钮 */}
+              {progressList && progressList.length > 0 && (
+                <div className="note-modal-progress-wrap">
+                  <button
+                    className="note-modal-progress-btn"
+                    disabled={localNote.archived}
+                    title={localNote.archived ? "归档笔记不设置进度" : "设置进度"}
+                    onClick={() => !localNote.archived && setShowProgressPicker((v) => !v)}
+                    style={
+                      !localNote.archived && localNote.progressId
+                        ? {
+                            color: progressList.find((p) => p.id === localNote.progressId)?.color,
+                            background: `${progressList.find((p) => p.id === localNote.progressId)?.color}18`,
+                            borderColor: `${progressList.find((p) => p.id === localNote.progressId)?.color}45`,
+                          }
+                        : undefined
+                    }
+                  >
+                    <span
+                      className="note-modal-progress-dot"
+                      style={
+                        !localNote.archived && localNote.progressId
+                          ? { background: progressList.find((p) => p.id === localNote.progressId)?.color }
+                          : undefined
+                      }
+                    />
+                    {(!localNote.archived && localNote.progressId
+                      ? progressList.find((p) => p.id === localNote.progressId)?.name
+                      : null) ?? "进度"}
+                  </button>
+                  {showProgressPicker && !localNote.archived && (
+                    <div className="note-modal-progress-dropdown">
+                      <button
+                        className={`note-modal-progress-option ${!localNote.progressId ? "active" : ""}`}
+                        onClick={() => { patchNote({ progressId: undefined }); setShowProgressPicker(false); }}
+                      >
+                        <span className="note-modal-progress-dot note-modal-progress-dot--none" />
+                        无
+                      </button>
+                      {progressList.map((p) => (
+                        <button
+                          key={p.id}
+                          className={`note-modal-progress-option ${localNote.progressId === p.id ? "active" : ""}`}
+                          onClick={() => { patchNote({ progressId: p.id }); setShowProgressPicker(false); }}
+                        >
+                          <span className="note-modal-progress-dot" style={{ background: p.color }} />
+                          {p.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
 
               <button
@@ -603,8 +663,23 @@ export function NoteEditModal({ note, allTags, dataDir, onUpdate, onDelete, onCl
         </div>
 
         {/* ── 编辑器区域 ───────────────────────────────────────── */}
-        <div className="note-modal-body" onClick={() => { setShowTagPicker(false); }}>
-          <DevlogNodeCtxProvider value={{ dataDir }}>
+        <div className="note-modal-body" onClick={() => { setShowTagPicker(false); }}>          <button
+            className="note-modal-editor-fullscreen-btn"
+            onClick={(e) => { e.stopPropagation(); setIsEditorFullscreen((v) => !v); }}
+            title={isEditorFullscreen ? "退出全屏 (Esc)" : "全屏编辑"}
+          >
+            {isEditorFullscreen ? (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="4 14 10 14 10 20" /><polyline points="20 10 14 10 14 4" />
+                <line x1="10" y1="14" x2="3" y2="21" /><line x1="21" y1="3" x2="14" y2="10" />
+              </svg>
+            ) : (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" />
+                <line x1="21" y1="3" x2="14" y2="10" /><line x1="3" y1="21" x2="10" y2="14" />
+              </svg>
+            )}
+          </button>          <DevlogNodeCtxProvider value={{ dataDir }}>
             <DevlogEditor
               initialContent={note.content}
               dataDir={dataDir}

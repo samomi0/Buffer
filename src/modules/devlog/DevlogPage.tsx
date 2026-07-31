@@ -21,6 +21,7 @@ export function DevlogPage() {
   const dataDir = useAppStore((s) => s.dataDir)!;
   const devlogDateFilter = useAppStore((s) => s.devlogDateFilter);
   const setDevlogDateFilter = useAppStore((s) => s.setDevlogDateFilter);
+  const devlogProgress = useAppStore((s) => s.devlogProgress);
 
   /* ── Ctrl+K 返回 ─────────────────────────────────────────── */
   useEffect(() => {
@@ -74,11 +75,11 @@ export function DevlogPage() {
   }, []);
 
   /* ── 按标签筛选器过滤笔记（搜索和时间过滤由 NoteGrid 负责） ── */
+  const includeTagIds = Object.entries(tagFilters).filter(([, s]) => s === "include").map(([id]) => id);
+  const excludeTagIds = Object.entries(tagFilters).filter(([, s]) => s === "exclude").map(([id]) => id);
   const tagFilteredNotes = notes.filter((n) => {
-    for (const [id, state] of Object.entries(tagFilters)) {
-      if (state === "include" && !n.tags.includes(id)) return false;
-      if (state === "exclude" && n.tags.includes(id)) return false;
-    }
+    if (excludeTagIds.some((id) => n.tags.includes(id))) return false;
+    if (includeTagIds.length > 0 && !includeTagIds.some((id) => n.tags.includes(id))) return false;
     return true;
   });
 
@@ -124,6 +125,12 @@ export function DevlogPage() {
     if (!n) return;
     const updated = { ...n, archived: !n.archived, updatedAt: new Date().toISOString() };
     handleUpdateNote(updated);
+  }
+
+  function handleProgressChange(noteId: string, progressId: string | undefined) {
+    const n = notes.find((x) => x.id === noteId);
+    if (!n) return;
+    handleUpdateNote({ ...n, progressId, updatedAt: new Date().toISOString() });
   }
 
   async function handleAddTag(tag: DevlogTag) {
@@ -214,6 +221,7 @@ export function DevlogPage() {
         <NoteGrid
           notes={tagFilteredNotes}
           tags={tags}
+          progressList={devlogProgress}
           showArchived={showArchived}
           timeFilter={timeFilter}
           onTimeFilterChange={setTimeFilter}
@@ -224,6 +232,7 @@ export function DevlogPage() {
           onOpenNote={(n) => setEditingNoteId(n.id)}
           onArchiveNote={handleArchiveNote}
           onDeleteNote={handleDeleteNote}
+          onProgressChange={handleProgressChange}
           onNewNote={handleNewNote}
         />
       </div>
@@ -234,6 +243,7 @@ export function DevlogPage() {
           key={editingNote.id}
           note={editingNote}
           allTags={tags}
+          progressList={devlogProgress}
           dataDir={dataDir}
           onUpdate={handleUpdateNote}
           onDelete={() => handleDeleteNote(editingNote.id)}

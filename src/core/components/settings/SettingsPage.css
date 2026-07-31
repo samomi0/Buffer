@@ -6,6 +6,7 @@
 }
 
 .settings-container {
+  position: relative;
   width: min(1120px, calc(100% - 24px));
   margin: 12px auto 18px;
 }
@@ -19,15 +20,38 @@
 
 .settings-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.86fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-top: 12px;
+  align-items: start;
 }
 
-.settings-side-column {
+.settings-column {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
+}
+
+.settings-panel-wrap {
+  min-width: 0;
+}
+
+/* 隐藏的测量容器：宽度与正式容器一致，块按列宽渲染以测得真实高度 */
+.settings-measure {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.settings-measure .settings-panel-wrap {
+  grid-column: 1;
 }
 
 .settings-panel {
@@ -277,7 +301,8 @@
 }
 
 @media (max-width: 1080px) {
-  .settings-layout {
+  .settings-layout,
+  .settings-measure {
     grid-template-columns: 1fr;
   }
 }
@@ -316,3 +341,102 @@
     width: 100%;
   }
 }
+
+/* ── 进度设置 ───────────────────────────────────────────────────── */
+.settings-btn-sm {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 11px;
+}
+
+.settings-btn-ghost {
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+.settings-btn-ghost:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.settings-progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.settings-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  border: 1px solid #e8edf5;
+  background: #fbfcfe;
+}
+
+.settings-progress-color {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+  flex-shrink: 0;
+}
+.settings-progress-color::-webkit-color-swatch-wrapper { padding: 0; }
+.settings-progress-color::-webkit-color-swatch { border-radius: 50%; border: 2px solid #e2e8f0; }
+
+.settings-progress-name {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 12px;
+  font-family: var(--font-ui);
+  outline: none;
+}
+.settings-progress-name:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+}
+
+.settings-progress-preview {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 100px;
+  border: 1px solid;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.settings-progress-delete {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.settings-progress-delete:hover:not(:disabled) {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.settings-progress-delete:disabled { opacity: 0.3; cursor: not-allowed; }

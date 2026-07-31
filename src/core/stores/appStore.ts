@@ -3,6 +3,20 @@ import { create } from "zustand";
 /** 模块类别：builtin = 标准模块，custom = 定制模块 */
 export type ModuleKind = "builtin" | "custom";
 
+export interface DevlogProgress {
+  id: string;
+  name: string;
+  color: string;
+}
+
+export const DEFAULT_DEVLOG_PROGRESS: DevlogProgress[] = [
+  { id: "plan",   name: "计划",   color: "#6366f1" },
+  { id: "todo",   name: "待办",   color: "#f59e0b" },
+  { id: "doing",  name: "进行中", color: "#3b82f6" },
+  { id: "paused", name: "暂停",   color: "#94a3b8" },
+  { id: "done",   name: "完成",   color: "#10b981" },
+];
+
 export interface ToolManifest {
   id: string;
   name: string;
@@ -59,6 +73,9 @@ interface AppState {
   /** 开发手记标签快速打开使用的命令（默认 code，如 idea、subl） */
   devlogOpenCmd: string;
   setDevlogOpenCmd: (cmd: string) => void;
+  /** 开发手记进度状态列表 */
+  devlogProgress: DevlogProgress[];
+  setDevlogProgress: (list: DevlogProgress[]) => void;
 
   setTools: (tools: ToolManifest[]) => void;
   setDataDir: (dir: string) => void;
@@ -83,6 +100,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   topbarToolIds: [],
   devlogDateFilter: null,
   devlogOpenCmd: "code",
+  devlogProgress: DEFAULT_DEVLOG_PROGRESS,
 
   setTools: (tools) => set((state) => ({
     tools,
@@ -123,6 +141,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setDevlogDateFilter: (date) => set({ devlogDateFilter: date }),
   setDevlogOpenCmd: (cmd) => set({ devlogOpenCmd: cmd }),
+  setDevlogProgress: (list) => set({ devlogProgress: list }),
 
   openTool: (id) => get().pushTool(id),
   closeTool: () => get().popTool(),

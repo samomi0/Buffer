@@ -273,10 +273,8 @@ export function VaultPage() {
         for (const tag of excludeFromFilters) {
           if (e.tags.includes(tag)) return false;
         }
-        const allIncludes = [...includeFromFilters, ...searchTags];
-        for (const tag of allIncludes) {
-          if (!e.tags.includes(tag)) return false;
-        }
+        if (includeFromFilters.length > 0 && !includeFromFilters.some((tag) => e.tags.includes(tag))) return false;
+        if (searchTags.length > 0 && !searchTags.some((tag) => e.tags.includes(tag))) return false;
         return true;
       });
     }

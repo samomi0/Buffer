@@ -221,13 +221,122 @@
   flex-shrink: 0;
 }
 
+/* ── 全屏模式 ───────────────────────────────────────────────────── */
+.note-modal--fullscreen {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+}
+
 /* ── 编辑器区域 ─────────────────────────────────────────────────── */
 .note-modal-body {
   flex: 1;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
+
+/* ── 全屏切换按钮 ───────────────────────────────────────────────── */
+.note-modal-editor-fullscreen-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+  box-shadow: 0 1px 4px rgba(0,0,0,.12);
+}
+.note-modal-body:hover .note-modal-editor-fullscreen-btn,
+.note-modal--fullscreen .note-modal-editor-fullscreen-btn { opacity: 1; }
+.note-modal-editor-fullscreen-btn:hover { background: var(--bg-hover); color: var(--text); }
+
+/* ── 进度状态按钮 ───────────────────────────────────────────────── */
+.note-modal-progress-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.note-modal-progress-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 8px 0 6px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+.note-modal-progress-btn:not(:disabled):hover {
+  border-color: var(--border-focus);
+  color: var(--text);
+}
+.note-modal-progress-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.note-modal-progress-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+.note-modal-progress-dot--none { background: var(--border); }
+
+.note-modal-progress-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 60;
+  padding: 4px;
+  min-width: 110px;
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.1s ease;
+}
+
+.note-modal-progress-option {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast);
+}
+.note-modal-progress-option:hover { background: var(--bg-hover); }
+.note-modal-progress-option.active { background: var(--bg-active); font-weight: 600; }
 
 /* 工具栏 & 编辑器样式已迁移至 RichTextEditor.css */
 
