@@ -418,7 +418,7 @@ const TERM_BUFFER_CAP: usize = 512 * 1024;
 
 struct TermSession {
     master: Box<dyn portable_pty::MasterPty + Send>,
-    writer: Box<dyn Write + Send>,
+    writer: std::sync::Arc<Mutex<Box<dyn Write + Send>>>,
     child: Box<dyn portable_pty::Child + Send + Sync>,
     /// 滚动缓冲区，输出线程写入，term_attach 回放
     buffer: std::sync::Arc<Mutex<Vec<u8>>>,
@@ -505,6 +505,8 @@ fn term_create(
         .master
         .take_writer()
         .map_err(|e| format!("获取终端写入端失败: {}", e))?;
+    let writer = std::sync::Arc::new(Mutex::new(writer));
+    let writer2 = std::sync::Arc::clone(&writer);
     let mut reader = pair
         .master
         .try_clone_reader()
@@ -515,30 +517,166 @@ fn term_create(
     let buffer = std::sync::Arc::new(Mutex::new(Vec::<u8>::new()));
     let buffer2 = std::sync::Arc::clone(&buffer);
     std::thread::spawn(move || {
-        let mut buf = [0u8; 4096];
+        // 输出流处理器：
+        //  - 解析 CSI 序列并维护近似光标位置 (row, col)
+        //  - 拦截 ESC[6n 光标位置查询，直接应答（ESC[row;colR），不进入缓冲/前端。
+        //    否则首次创建时 bash 等待应答会一直阻塞不输出提示符；
+        //    而回放缓冲里的查询序列又会让 xterm 自动应答产生多余输入（多出 R）。
+        let mut pending: Vec<u8> = Vec::new();
+        let mut cursor_row: u16 = 1;
+        let mut cursor_col: u16 = 1;
+
+        // 收集一个 CSI 序列（起点为 ESC 所在下标），返回参数与最终字节。
+        // 注意必须接受参数字节范围 0x30-0x3f（含 ? < = > 私有前缀）与中间字节
+        // 0x20-0x2f，否则 Git Bash 输出的 \x1b[?9001h 等私有模式序列会让解析器
+        // 误判为"未完成"而卡住，导致后续所有输出无法透传（表现为终端空白）。
+        fn parse_csi(data: &[u8], start: usize) -> Option<(Vec<u16>, u8, usize)> {
+            let mut i = start + 2;
+            let mut params: Vec<u16> = Vec::new();
+            let mut cur: u16 = 0;
+            let mut has_param = false;
+            while i < data.len() {
+                let b = data[i];
+                if b.is_ascii_digit() {
+                    cur = cur.saturating_mul(10).saturating_add((b - b'0') as u16);
+                    has_param = true;
+                } else if b == b';' {
+                    params.push(if has_param { cur } else { 0 });
+                    cur = 0;
+                    has_param = false;
+                } else if (0x30..=0x3f).contains(&b) {
+                    // 参数字节范围内的其它字符（?:<> 等私有模式前缀），忽略
+                } else if (0x20..=0x2f).contains(&b) {
+                    // 中间字节，忽略
+                } else if (0x40..=0x7e).contains(&b) {
+                    params.push(if has_param { cur } else { 0 });
+                    return Some((params, b, i - start + 1));
+                } else {
+                    return None;
+                }
+                i += 1;
+            }
+            None
+        }
+
         loop {
+            let mut buf = [0u8; 4096];
             match reader.read(&mut buf) {
                 Ok(0) | Err(_) => break,
                 Ok(n) => {
-                    let data = String::from_utf8_lossy(&buf[..n]).to_string();
-                    if let Ok(mut b) = buffer2.lock() {
-                        b.extend_from_slice(data.as_bytes());
-                        if b.len() > TERM_BUFFER_CAP {
-                            let excess = b.len() - TERM_BUFFER_CAP;
-                            let start = b
-                                .iter()
-                                .enumerate()
-                                .skip(excess)
-                                .find(|(_, byte)| **byte == b'\n' || **byte == b'\r')
-                                .map(|(i, _)| i + 1)
-                                .unwrap_or(excess);
-                            b.drain(..start);
+                    pending.extend_from_slice(&buf[..n]);
+                    let mut clean: Vec<u8> = Vec::new();
+                    let mut i = 0usize;
+                    while i < pending.len() {
+                        let b = pending[i];
+                        if b == 0x1b {
+                            // CSI 序列 ESC[
+                            if i + 1 < pending.len() && pending[i + 1] == b'[' {
+                                if let Some((params, final_byte, len)) = parse_csi(&pending, i) {
+                                    match final_byte {
+                                        b'n' if params == vec![6] => {
+                                            // 光标位置查询 → 后端直接应答，不进入缓冲/前端。
+                                            // 这样首次创建时 bash 能正常继续输出提示符；
+                                            // 同时查询序列不会进入缓冲，重进回放不会让
+                                            // xterm 自动应答产生多余输入（多出 R）。
+                                            if let Ok(mut w) = writer2.lock() {
+                                                let resp = format!("\x1b[{};{}R", cursor_row, cursor_col);
+                                                let _ = w.write_all(resp.as_bytes());
+                                                let _ = w.flush();
+                                            }
+                                        }
+                                        _ => {
+                                            // 更新光标位置
+                                            match final_byte {
+                                                b'H' | b'f' => {
+                                                    cursor_row = params.get(0).copied().unwrap_or(1).max(1);
+                                                    cursor_col = params.get(1).copied().unwrap_or(1).max(1);
+                                                }
+                                                b'A' => cursor_row = cursor_row.saturating_sub(params.get(0).copied().unwrap_or(1).max(1)).max(1),
+                                                b'B' => cursor_row = cursor_row.saturating_add(params.get(0).copied().unwrap_or(1).max(1)),
+                                                b'C' => cursor_col = cursor_col.saturating_add(params.get(0).copied().unwrap_or(1).max(1)),
+                                                b'D' => cursor_col = cursor_col.saturating_sub(params.get(0).copied().unwrap_or(1).max(1)).max(1),
+                                                b'G' => cursor_col = params.get(0).copied().unwrap_or(1).max(1),
+                                                b'd' => cursor_row = params.get(0).copied().unwrap_or(1).max(1),
+                                                _ => {}
+                                            }
+                                            clean.extend_from_slice(&pending[i..i + len]);
+                                        }
+                                    }
+                                    i += len;
+                                    continue;
+                                } else {
+                                    break; // CSI 序列未完成，保留尾部等下一次读取
+                                }
+                            }
+                            // OSC 序列 ESC]：透传，直到 BEL 或 ESC\ (ST)
+                            if i + 1 < pending.len() && pending[i + 1] == b']' {
+                                let mut j = i + 2;
+                                let mut end = None;
+                                while j < pending.len() {
+                                    if pending[j] == 0x07 {
+                                        end = Some(j + 1);
+                                        break;
+                                    }
+                                    if pending[j] == 0x1b && j + 1 < pending.len() && pending[j + 1] == b'\\' {
+                                        end = Some(j + 2);
+                                        break;
+                                    }
+                                    j += 1;
+                                }
+                                if let Some(end) = end {
+                                    clean.extend_from_slice(&pending[i..end]);
+                                    i = end;
+                                    continue;
+                                } else {
+                                    break; // OSC 未完成
+                                }
+                            }
+                            // 其它 ESC 前缀，直接透传
+                            clean.push(b);
+                            i += 1;
+                        } else {
+                            // 普通字节：更新近似光标位置
+                            match b {
+                                b'\r' => cursor_col = 1,
+                                b'\n' => {
+                                    cursor_row = cursor_row.saturating_add(1);
+                                    cursor_col = 1;
+                                }
+                                0x20..=0x7e => cursor_col = cursor_col.saturating_add(1),
+                                _ => {}
+                            }
+                            clean.push(b);
+                            i += 1;
                         }
                     }
-                    let _ = app2.emit(
-                        "term-output",
-                        serde_json::json!({ "id": id2, "data": data }),
-                    );
+                    if i < pending.len() {
+                        pending.drain(..i);
+                    } else {
+                        pending.clear();
+                    }
+
+                    if !clean.is_empty() {
+                        let data = String::from_utf8_lossy(&clean).to_string();
+                        if let Ok(mut b) = buffer2.lock() {
+                            b.extend_from_slice(data.as_bytes());
+                            if b.len() > TERM_BUFFER_CAP {
+                                let excess = b.len() - TERM_BUFFER_CAP;
+                                let start = b
+                                    .iter()
+                                    .enumerate()
+                                    .skip(excess)
+                                    .find(|(_, byte)| **byte == b'\n' || **byte == b'\r')
+                                    .map(|(i, _)| i + 1)
+                                    .unwrap_or(excess);
+                                b.drain(..start);
+                            }
+                        }
+                        let _ = app2.emit(
+                            "term-output",
+                            serde_json::json!({ "id": id2, "data": data }),
+                        );
+                    }
                 }
             }
         }
@@ -566,8 +704,11 @@ fn term_write(
 ) -> Result<(), String> {
     let mut sessions = state.sessions.lock().map_err(|e| e.to_string())?;
     let session = sessions.get_mut(&id).ok_or_else(|| "终端不存在".to_string())?;
-    session
+    let mut writer = session
         .writer
+        .lock()
+        .map_err(|e| format!("锁定终端写入端失败: {}", e))?;
+    writer
         .write_all(data.as_bytes())
         .map_err(|e| format!("写入终端失败: {}", e))
 }

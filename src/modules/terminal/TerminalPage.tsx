@@ -131,14 +131,9 @@ export function TerminalPage() {
       }
       termRef.current = { term, fit };
 
-      // 回放历史输出时，xterm 会对缓冲里的终端查询序列（如 ESC[6n 光标位置查询）
-      // 自动应答（ESC[行;列R），这些应答经 onData 转发给后端会变成多余输入
-      // （表现为重进终端页后输入行多出一个 "R"）。回放期间屏蔽 onData 转发。
-      // 注意：xterm 的 write 是异步批处理（WriteBuffer 经 setTimeout 才解析），
-      // 因此必须等 onWriteParsed 确认回放真正解析完成后再恢复转发。
-      let replaying = false;
+      // 注意：光标位置查询（ESC[6n）由后端拦截并应答，不再进入缓冲/前端，
+      // 因此 xterm 不会对回放内容产生自动应答，无需屏蔽 onData 转发。
       term.onData((data) => {
-        if (replaying) return;
         void termWrite(id, data);
       });
       term.onResize(({ cols, rows }) => {
@@ -158,29 +153,15 @@ export function TerminalPage() {
       }
       outputUnlistenRef.current = unlisten;
 
-      // 回放历史输出，回放期间的自动应答一并丢弃
+      // 回放历史输出（查询序列已由后端拦截，不会触发 xterm 自动应答）
       try {
         const buffer = await termAttach(id);
         if (attachSeqRef.current === seq && buffer) {
-          const replayDone = new Promise<void>((resolve) => {
-            const sub = term.onWriteParsed(() => {
-              sub.dispose();
-              resolve();
-            });
-          });
-          replaying = true;
           term.write(buffer);
-          // 兜底超时：attach 被取代或极端情况下 onWriteParsed 不触发时避免悬挂
-          await Promise.race([
-            replayDone,
-            new Promise<void>((resolve) => window.setTimeout(resolve, 1000)),
-          ]);
-          if (attachSeqRef.current !== seq) return;
         }
       } catch {
         /* ignore */
       }
-      replaying = false;
 
       const ro = new ResizeObserver(() => {
         try {
