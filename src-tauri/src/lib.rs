@@ -396,7 +396,7 @@ fn write_calendar_events(data_dir: String, json: String) -> Result<(), String> {
 fn get_app_info() -> String {
     serde_json::json!({
         "name": "Buffer",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "platform": std::env::consts::OS,
     })
     .to_string()
