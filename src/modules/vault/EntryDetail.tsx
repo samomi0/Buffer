@@ -7,15 +7,17 @@ interface Props {
   onEdit: () => void;
   onDelete: () => void;
   onFilterTag: (tag: string) => void;
+  onRecordUsage?: (id: string) => void;
 }
 
-function SecretField({ value }: { value: string }) {
+function SecretField({ value, onCopy }: { value: string; onCopy?: () => void }) {
   const [visible, setVisible] = useState(false);
   const [copied, setCopied] = useState(false);
 
   function copy() {
     navigator.clipboard.writeText(value).then(() => {
       setCopied(true);
+      onCopy?.();
       setTimeout(() => setCopied(false), 1500);
     });
   }
@@ -59,11 +61,12 @@ function SecretField({ value }: { value: string }) {
   );
 }
 
-function CopyableValue({ label, value }: { label: string; value: string }) {
+function CopyableValue({ label, value, onCopy }: { label: string; value: string; onCopy?: () => void }) {
   const [copied, setCopied] = useState(false);
   function copy() {
     navigator.clipboard.writeText(value).then(() => {
       setCopied(true);
+      onCopy?.();
       setTimeout(() => setCopied(false), 1500);
     });
   }
@@ -86,15 +89,15 @@ function CopyableValue({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Field({ label, value, secret }: { label: string; value: string; secret?: boolean }) {
+function Field({ label, value, secret, onCopy }: { label: string; value: string; secret?: boolean; onCopy?: () => void }) {
   if (!value) return null;
   return (
     <div className="vault-detail-field">
       <span className="vault-detail-label">{label}</span>
       {secret ? (
-        <SecretField value={value} />
+        <SecretField value={value} onCopy={onCopy} />
       ) : (
-        <CopyableValue label={label} value={value} />
+        <CopyableValue label={label} value={value} onCopy={onCopy} />
       )}
     </div>
   );
@@ -106,7 +109,7 @@ const TYPE_LABEL: Record<string, string> = {
   custom: "自定义",
 };
 
-export function EntryDetail({ entry, onClose, onEdit, onDelete, onFilterTag }: Props) {
+export function EntryDetail({ entry, onClose, onEdit, onDelete, onFilterTag, onRecordUsage }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
@@ -127,6 +130,10 @@ export function EntryDetail({ entry, onClose, onEdit, onDelete, onFilterTag }: P
   if (!entry) {
     return null;
   }
+
+  const handleCopyField = () => {
+    onRecordUsage?.(entry.id);
+  };
 
   return (
     <div
@@ -186,26 +193,26 @@ export function EntryDetail({ entry, onClose, onEdit, onDelete, onFilterTag }: P
         <div className="vault-detail-body">
           {entry.type === "server" && (
             <>
-              <Field label="IP 地址" value={entry.ip ?? ""} />
-              <Field label="目录" value={entry.dir ?? ""} />
-              <Field label="系统类型" value={entry.osType ?? ""} />
+              <Field label="IP 地址" value={entry.ip ?? ""} onCopy={handleCopyField} />
+              <Field label="目录" value={entry.dir ?? ""} onCopy={handleCopyField} />
+              <Field label="系统类型" value={entry.osType ?? ""} onCopy={handleCopyField} />
             </>
           )}
           {entry.type === "password" && (
             <>
-              <Field label="地址" value={entry.url ?? ""} />
-              <Field label="账号" value={entry.account ?? ""} />
-              <Field label="密码" value={entry.password ?? ""} secret />
+              <Field label="地址" value={entry.url ?? ""} onCopy={handleCopyField} />
+              <Field label="账号" value={entry.account ?? ""} onCopy={handleCopyField} />
+              <Field label="密码" value={entry.password ?? ""} secret onCopy={handleCopyField} />
             </>
           )}
           {entry.type === "custom" && entry.fields && entry.fields.length > 0 && (
             <>
               {entry.fields.map((f, i) => (
-                <Field key={i} label={f.key} value={f.value} secret={f.secret} />
+                <Field key={i} label={f.key} value={f.value} secret={f.secret} onCopy={handleCopyField} />
               ))}
             </>
           )}
-          {entry.note && <Field label="备注" value={entry.note} />}
+          {entry.note && <Field label="备注" value={entry.note} onCopy={handleCopyField} />}
           {entry.tags.length > 0 && (
             <div className="vault-detail-field">
               <span className="vault-detail-label">标签</span>
@@ -217,7 +224,12 @@ export function EntryDetail({ entry, onClose, onEdit, onDelete, onFilterTag }: P
             </div>
           )}
         </div>
-        <div className="vault-detail-footer">左键空白处关闭，右键任意位置快速关闭</div>
+        <div className="vault-detail-footer">
+          <span>左键空白处关闭，右键任意位置快速关闭</span>
+          {typeof entry.usageCount === "number" && entry.usageCount > 0 && (
+            <span className="vault-detail-usage">已复制 {entry.usageCount} 次</span>
+          )}
+        </div>
       </div>
     </div>
   );

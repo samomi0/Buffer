@@ -49,6 +49,11 @@ function normalizeVaultData(value: unknown): VaultData {
           ? entry.type
           : "custom",
       note: typeof entry.note === "string" ? entry.note : "",
+      usageCount:
+        typeof entry.usageCount === "number" && !Number.isNaN(entry.usageCount)
+          ? entry.usageCount
+          : 0,
+      lastUsedAt: typeof entry.lastUsedAt === "string" ? entry.lastUsedAt : undefined,
       tags: Array.isArray(entry.tags)
         ? entry.tags.filter((tag): tag is string => typeof tag === "string")
         : [],

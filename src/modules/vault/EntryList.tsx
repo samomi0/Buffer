@@ -11,6 +11,7 @@ interface Props {
   onImport: () => void;
   onChangePassword: () => void;
   onLock: () => void;
+  onRecordUsage?: (id: string) => void;
   saving?: boolean;
 }
 
@@ -69,17 +70,19 @@ export function EntryList({
   onImport,
   onChangePassword,
   onLock,
+  onRecordUsage,
   saving,
 }: Props) {
   const [toast, setToast] = useState<string | null>(null);
 
-  const handleCopy = useCallback((text: string, label: string, event: React.MouseEvent) => {
+  const handleCopy = useCallback((id: string, text: string, label: string, event: React.MouseEvent) => {
     event.stopPropagation();
     event.preventDefault();
     navigator.clipboard.writeText(text);
+    onRecordUsage?.(id);
     setToast(label);
     setTimeout(() => setToast(null), 1500);
-  }, []);
+  }, [onRecordUsage]);
 
   return (
     <div className="vault-list-panel">
@@ -169,8 +172,8 @@ export function EntryList({
                       <span
                         className="vault-capsule"
                         style={{ color: c.text, background: c.bg }}
-                        onClick={(ev) => handleCopy(e.ip!, "IP", ev)}
-                        onContextMenu={(ev) => handleCopy(e.ip!, "IP", ev)}
+                        onClick={(ev) => handleCopy(e.id, e.ip!, "IP", ev)}
+                        onContextMenu={(ev) => handleCopy(e.id, e.ip!, "IP", ev)}
                         title="左键/右键复制"
                       >
                         IP: {e.ip}
@@ -180,8 +183,8 @@ export function EntryList({
                       <span
                         className="vault-capsule"
                         style={{ color: c.text, background: c.bg }}
-                        onClick={(ev) => handleCopy(e.dir!, "目录", ev)}
-                        onContextMenu={(ev) => handleCopy(e.dir!, "目录", ev)}
+                        onClick={(ev) => handleCopy(e.id, e.dir!, "目录", ev)}
+                        onContextMenu={(ev) => handleCopy(e.id, e.dir!, "目录", ev)}
                         title="左键/右键复制"
                       >
                         目录: {e.dir}
@@ -195,8 +198,8 @@ export function EntryList({
                       <span
                         className="vault-capsule"
                         style={{ color: c.text, background: c.bg }}
-                        onClick={(ev) => handleCopy(e.account!, "账号", ev)}
-                        onContextMenu={(ev) => handleCopy(e.account!, "账号", ev)}
+                        onClick={(ev) => handleCopy(e.id, e.account!, "账号", ev)}
+                        onContextMenu={(ev) => handleCopy(e.id, e.account!, "账号", ev)}
                         title="左键/右键复制"
                       >
                         账号: {e.account}
@@ -206,8 +209,8 @@ export function EntryList({
                       <span
                         className="vault-capsule"
                         style={{ color: c.text, background: c.bg }}
-                        onClick={(ev) => handleCopy(e.url!, "地址", ev)}
-                        onContextMenu={(ev) => handleCopy(e.url!, "地址", ev)}
+                        onClick={(ev) => handleCopy(e.id, e.url!, "地址", ev)}
+                        onContextMenu={(ev) => handleCopy(e.id, e.url!, "地址", ev)}
                         title="左键/右键复制"
                       >
                         地址: {e.url}
@@ -217,8 +220,8 @@ export function EntryList({
                       <span
                         className="vault-capsule vault-capsule--secret"
                         style={{ color: c.text, background: c.bg }}
-                        onClick={(ev) => handleCopy(e.password!, "密码", ev)}
-                        onContextMenu={(ev) => handleCopy(e.password!, "密码", ev)}
+                        onClick={(ev) => handleCopy(e.id, e.password!, "密码", ev)}
+                        onContextMenu={(ev) => handleCopy(e.id, e.password!, "密码", ev)}
                         title="左键/右键复制"
                       >
                         密码: ••••••••
@@ -238,8 +241,8 @@ export function EntryList({
                             key={f.key}
                             className={`vault-capsule ${f.secret ? "vault-capsule--secret" : ""}`}
                             style={{ color: c.text, background: c.bg }}
-                            onClick={(ev) => handleCopy(f.value, f.key, ev)}
-                            onContextMenu={(ev) => handleCopy(f.value, f.key, ev)}
+                            onClick={(ev) => handleCopy(e.id, f.value, f.key, ev)}
+                            onContextMenu={(ev) => handleCopy(e.id, f.value, f.key, ev)}
                             title="左键/右键复制"
                           >
                             {f.key}: {f.secret ? "••••••••" : f.value || "—"}

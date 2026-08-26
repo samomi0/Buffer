@@ -205,16 +205,46 @@ export function VaultPage() {
   );
 
   // ── Entry CRUD ───────────────────────────────────────────────────────────
+  const handleRecordUsage = useCallback(
+    async (id: string) => {
+      if (!cryptoKey) return;
+      const now = new Date().toISOString();
+      let hasChange = false;
+      const newEntries = vault.entries.map((e) => {
+        if (e.id === id) {
+          hasChange = true;
+          return {
+            ...e,
+            usageCount: (e.usageCount ?? 0) + 1,
+            lastUsedAt: now,
+          };
+        }
+        return e;
+      });
+      if (!hasChange) return;
+      const newVault: VaultData = { ...vault, entries: newEntries };
+      setVault(newVault);
+      await persist(newVault, cryptoKey);
+    },
+    [vault, cryptoKey, persist]
+  );
+
   async function handleSaveEntry(entry: VaultEntry) {
-    const newEntries = vault.entries.find((e) => e.id === entry.id)
-      ? vault.entries.map((e) => (e.id === entry.id ? entry : e))
-      : [entry, ...vault.entries];
+    const existing = vault.entries.find((e) => e.id === entry.id);
+    const entryToSave: VaultEntry = {
+      ...entry,
+      usageCount: entry.usageCount ?? existing?.usageCount ?? 0,
+      lastUsedAt: entry.lastUsedAt ?? existing?.lastUsedAt,
+    };
+    const newEntries = existing
+      ? vault.entries.map((e) => (e.id === entry.id ? entryToSave : e))
+      : [entryToSave, ...vault.entries];
 
     // Sync global tags
-    const allTags = Array.from(new Set([...vault.tags, ...entry.tags]));
+    const allTags = Array.from(new Set([...vault.tags, ...entryToSave.tags]));
     const newVault: VaultData = { entries: newEntries, tags: allTags };
     setVault(newVault);
-    setSelectedId(entry.id);
+    setSelectedId(entryToSave.id);
     setEditingEntry(null);
     await persist(newVault, cryptoKey!);
   }
@@ -290,7 +320,21 @@ export function VaultPage() {
         return haystack.includes(q);
       });
     }
-    return list;
+
+    // 默认排序：按使用频率 (usageCount 降序) 优先展示，相同频率按最近使用时间降序
+    return [...list].sort((a, b) => {
+      const countA = a.usageCount ?? 0;
+      const countB = b.usageCount ?? 0;
+      if (countB !== countA) {
+        return countB - countA;
+      }
+      const timeA = a.lastUsedAt ? new Date(a.lastUsedAt).getTime() : 0;
+      const timeB = b.lastUsedAt ? new Date(b.lastUsedAt).getTime() : 0;
+      if (timeB !== timeA) {
+        return timeB - timeA;
+      }
+      return 0;
+    });
   }, [vault.entries, selectedType, tagFilters, searchTokens]);
 
   const tagCounts = useMemo(() => {
@@ -360,6 +404,7 @@ export function VaultPage() {
           onImport={() => setShowImportModal(true)}
           onChangePassword={() => { setShowPwdChange(true); setNewPwd(""); }}
           onLock={() => { clearPassword(); setCryptoKey(null); setVault(EMPTY_VAULT); setSelectedId(null); setSearchQuery(""); setTagFilters({}); setSelectedType(null); setPinnedTags([]); setInitPhase("lock-screen"); }}
+          onRecordUsage={handleRecordUsage}
           saving={saving}
         />
       </div>
@@ -371,6 +416,7 @@ export function VaultPage() {
           onEdit={() => setEditingEntry(selectedEntry)}
           onDelete={handleDeleteEntry}
           onFilterTag={(tag) => handleTagFilterChange(tag)}
+          onRecordUsage={handleRecordUsage}
         />
       )}
 
