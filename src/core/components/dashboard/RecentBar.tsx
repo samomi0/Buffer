@@ -126,6 +126,21 @@ function ToolIcon({ toolId }: { toolId: string }) {
           <path d="M14 4l-4 16" />
         </svg>
       );
+    case "DshWeb":
+      return (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 11.5 C3 6.8 6.8 4 11 4 C15.2 4 18.6 6.6 20.2 9.8 L23.6 7.6 L22.3 11.2 L23.6 14.8 L20.2 12.6 C18.6 15.8 15.2 18.4 11 18.4 C6.8 18.4 3 15.6 3 11.5 Z" />
+          <circle cx="6.6" cy="8.8" r="0.9" fill="currentColor" stroke="none" />
+        </svg>
+      );
+    case "Terminal":
+      return (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2.5" />
+          <path d="M6 9l3.5 3L6 15" />
+          <path d="M11.5 15H18" />
+        </svg>
+      );
     case "WICacheViewer":
       return (
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">

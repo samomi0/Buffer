@@ -17,6 +17,29 @@ export const DEFAULT_DEVLOG_PROGRESS: DevlogProgress[] = [
   { id: "done",   name: "完成",   color: "#10b981" },
 ];
 
+/** DeepSeek Harness Web 集成配置（前端地址） */
+export interface DshConfig {
+  /** Web 前端地址，默认 http://127.0.0.1:3080 */
+  webUrl?: string;
+}
+
+export const DEFAULT_DSH_CONFIG: DshConfig = {
+  webUrl: "http://127.0.0.1:3080",
+};
+
+/** 终端配置 */
+export interface TerminalConfig {
+  /** 终端可执行文件路径，留空则自动检测 bash.exe */
+  shellPath?: string;
+  /** 终端启动工作目录，留空则使用用户主目录 */
+  cwd?: string;
+}
+
+export const DEFAULT_TERMINAL_CONFIG: TerminalConfig = {
+  shellPath: "",
+  cwd: "",
+};
+
 export interface ToolManifest {
   id: string;
   name: string;
@@ -76,6 +99,12 @@ interface AppState {
   /** 开发手记进度状态列表 */
   devlogProgress: DevlogProgress[];
   setDevlogProgress: (list: DevlogProgress[]) => void;
+  /** DeepSeek Harness Web 前端地址配置 */
+  dshConfig: DshConfig;
+  setDshConfig: (config: DshConfig) => void;
+  /** 终端配置 */
+  terminalConfig: TerminalConfig;
+  setTerminalConfig: (config: TerminalConfig) => void;
 
   setTools: (tools: ToolManifest[]) => void;
   setDataDir: (dir: string) => void;
@@ -101,6 +130,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   devlogDateFilter: null,
   devlogOpenCmd: "code",
   devlogProgress: DEFAULT_DEVLOG_PROGRESS,
+  dshConfig: DEFAULT_DSH_CONFIG,
+  terminalConfig: DEFAULT_TERMINAL_CONFIG,
 
   setTools: (tools) => set((state) => ({
     tools,
@@ -142,6 +173,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   setDevlogDateFilter: (date) => set({ devlogDateFilter: date }),
   setDevlogOpenCmd: (cmd) => set({ devlogOpenCmd: cmd }),
   setDevlogProgress: (list) => set({ devlogProgress: list }),
+  setDshConfig: (config) => set({ dshConfig: config }),
+  setTerminalConfig: (config) => set({ terminalConfig: config }),
 
   openTool: (id) => get().pushTool(id),
   closeTool: () => get().popTool(),

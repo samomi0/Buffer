@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAppStore, type ToolManifest } from "./core/stores/appStore";
+import { useAppStore, type ToolManifest, DEFAULT_DSH_CONFIG, DEFAULT_TERMINAL_CONFIG } from "./core/stores/appStore";
 import { AppTopBar } from "./core/components/dashboard/AppTopBar";
 import { DashboardPage } from "./core/components/dashboard/DashboardPage";
 import { ToolFrame } from "./core/components/tools/ToolFrame";
@@ -8,6 +8,8 @@ import { SettingsPage } from "./core/components/settings/SettingsPage";
 import { CUSTOM_MODULES, CUSTOM_COMPONENTS } from "./custom/index";
 import { VaultPage } from "./modules/vault/VaultPage";
 import { DevlogPage } from "./modules/devlog/DevlogPage";
+import { DshWebPage } from "./modules/dshweb/DshWebPage";
+import { TerminalPage } from "./modules/terminal/TerminalPage";
 import { readWorkbenchSettings, writeWorkbenchSettings } from "./core/lib/workbenchSettings";
 import { normalizeTopbarToolIds } from "./core/stores/appStore";
 
@@ -35,6 +37,22 @@ const BUILTIN_MODULES: ToolManifest[] = [
     version: "1.0",
     kind: "builtin",
   },
+  {
+    id: "DshWeb",
+    name: "Harness Web",
+    icon: "dshweb",
+    description: "内嵌访问 DeepSeek Harness Web 前端地址",
+    version: "1.0",
+    kind: "builtin",
+  },
+  {
+    id: "Terminal",
+    name: "终端",
+    icon: "terminal",
+    description: "创建终端会话并运行指令（默认 bash.exe）",
+    version: "1.0",
+    kind: "builtin",
+  },
 ];
 
 const BUILTIN_TOOLS = [...BUILTIN_MODULES, ...CUSTOM_MODULES];
@@ -49,6 +67,8 @@ function App() {
   const setTopbarToolIds = useAppStore((s) => s.setTopbarToolIds);
   const setDevlogOpenCmd = useAppStore((s) => s.setDevlogOpenCmd);
   const setDevlogProgress = useAppStore((s) => s.setDevlogProgress);
+  const setDshConfig = useAppStore((s) => s.setDshConfig);
+  const setTerminalConfig = useAppStore((s) => s.setTerminalConfig);
 
 
   const getDefaultTopbarToolIds = (items: ToolManifest[]) => items.map((tool) => tool.id);
@@ -95,6 +115,12 @@ function App() {
           }
           if (settings.devlogProgress && settings.devlogProgress.length > 0) {
             setDevlogProgress(settings.devlogProgress);
+          }
+          if (settings.dsh) {
+            setDshConfig({ ...DEFAULT_DSH_CONFIG, ...settings.dsh });
+          }
+          if (settings.terminal) {
+            setTerminalConfig({ ...DEFAULT_TERMINAL_CONFIG, ...settings.terminal });
           }
         }
 
@@ -151,6 +177,8 @@ function App() {
       switch (tool.id) {
         case "SecureVault": return <VaultPage />;
         case "DevLog":      return <DevlogPage />;
+        case "DshWeb":      return <DshWebPage />;
+        case "Terminal":    return <TerminalPage />;
         default:            return <DashboardPage />;
       }
     }

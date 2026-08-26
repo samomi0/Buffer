@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::Manager;
 
@@ -402,14 +402,246 @@ fn get_app_info() -> String {
     .to_string()
 }
 
+// ── 终端集成 ──────────────────────────────────────────────────────────
+//
+// 基于 portable-pty（Windows 使用 ConPTY）为每个会话创建伪终端，
+// 输出通过 term-output 事件实时推送到前端，输入/尺寸调整通过命令下发。
+// 默认 shell 为 bash.exe（Git Bash 优先），可在设置中配置自定义路径。
+
+use std::collections::HashMap;
+use std::io::Write;
+use portable_pty::{native_pty_system, CommandBuilder, PtySize};
+use tauri::Emitter;
+
+/// 终端会话滚动缓冲区上限（字节）
+const TERM_BUFFER_CAP: usize = 512 * 1024;
+
+struct TermSession {
+    master: Box<dyn portable_pty::MasterPty + Send>,
+    writer: Box<dyn Write + Send>,
+    child: Box<dyn portable_pty::Child + Send + Sync>,
+    /// 滚动缓冲区，输出线程写入，term_attach 回放
+    buffer: std::sync::Arc<Mutex<Vec<u8>>>,
+}
+
+struct TerminalState {
+    sessions: Mutex<HashMap<String, TermSession>>,
+}
+
+/// 探测可用的 bash.exe（Git Bash 优先，其次常见路径，最后 WSL）
+#[tauri::command]
+fn term_detect_shell() -> Result<String, String> {
+    let candidates = [
+        "D:\\software\\git\\Git\\bin\\bash.exe",
+        "D:\\software\\git\\Git\\usr\\bin\\bash.exe",
+        "C:\\Program Files\\Git\\bin\\bash.exe",
+        "C:\\Program Files\\Git\\usr\\bin\\bash.exe",
+        "C:\\Program Files (x86)\\Git\\bin\\bash.exe",
+        "C:\\msys64\\usr\\bin\\bash.exe",
+        "C:\\Windows\\System32\\bash.exe",
+    ];
+    for c in candidates {
+        if Path::new(c).exists() {
+            return Ok(c.to_string());
+        }
+    }
+    #[cfg(target_os = "windows")]
+    {
+        if let Ok(out) = std::process::Command::new("where").arg("bash").output() {
+            if out.status.success() {
+                if let Some(first) = String::from_utf8_lossy(&out.stdout)
+                    .lines()
+                    .next()
+                    .map(|s| s.trim().to_string())
+                {
+                    if !first.is_empty() {
+                        return Ok(first);
+                    }
+                }
+            }
+        }
+    }
+    Ok("bash".to_string())
+}
+
+/// 创建终端会话，启动后台读取线程并推送 term-output 事件
+#[tauri::command]
+fn term_create(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, TerminalState>,
+    id: String,
+    shell: Option<String>,
+    cwd: Option<String>,
+    cols: u16,
+    rows: u16,
+) -> Result<(), String> {
+    let shell = shell.unwrap_or_else(|| "bash".to_string());
+    let pty_system = native_pty_system();
+    let pair = pty_system
+        .openpty(PtySize {
+            rows,
+            cols,
+            pixel_width: 0,
+            pixel_height: 0,
+        })
+        .map_err(|e| format!("创建伪终端失败: {}", e))?;
+
+    let mut cmd = CommandBuilder::new(&shell);
+    cmd.env("TERM", "xterm-256color");
+    cmd.env("COLORTERM", "truecolor");
+    let cwd = cwd.filter(|s| !s.trim().is_empty()).map(PathBuf::from);
+    if let Some(dir) = &cwd {
+        if dir.exists() {
+            cmd.cwd(dir);
+        }
+    }
+    let child = pair
+        .slave
+        .spawn_command(cmd)
+        .map_err(|e| format!("启动 shell {} 失败: {}", shell, e))?;
+    drop(pair.slave);
+
+    let writer = pair
+        .master
+        .take_writer()
+        .map_err(|e| format!("获取终端写入端失败: {}", e))?;
+    let mut reader = pair
+        .master
+        .try_clone_reader()
+        .map_err(|e| format!("获取终端读取端失败: {}", e))?;
+
+    let app2 = app.clone();
+    let id2 = id.clone();
+    let buffer = std::sync::Arc::new(Mutex::new(Vec::<u8>::new()));
+    let buffer2 = std::sync::Arc::clone(&buffer);
+    std::thread::spawn(move || {
+        let mut buf = [0u8; 4096];
+        loop {
+            match reader.read(&mut buf) {
+                Ok(0) | Err(_) => break,
+                Ok(n) => {
+                    let data = String::from_utf8_lossy(&buf[..n]).to_string();
+                    if let Ok(mut b) = buffer2.lock() {
+                        b.extend_from_slice(data.as_bytes());
+                        if b.len() > TERM_BUFFER_CAP {
+                            let excess = b.len() - TERM_BUFFER_CAP;
+                            let start = b
+                                .iter()
+                                .enumerate()
+                                .skip(excess)
+                                .find(|(_, byte)| **byte == b'\n' || **byte == b'\r')
+                                .map(|(i, _)| i + 1)
+                                .unwrap_or(excess);
+                            b.drain(..start);
+                        }
+                    }
+                    let _ = app2.emit(
+                        "term-output",
+                        serde_json::json!({ "id": id2, "data": data }),
+                    );
+                }
+            }
+        }
+    });
+
+    let mut sessions = state.sessions.lock().map_err(|e| e.to_string())?;
+    sessions.insert(
+        id.clone(),
+        TermSession {
+            master: pair.master,
+            writer,
+            child,
+            buffer,
+        },
+    );
+    Ok(())
+}
+
+/// 向终端写入输入
+#[tauri::command]
+fn term_write(
+    state: tauri::State<'_, TerminalState>,
+    id: String,
+    data: String,
+) -> Result<(), String> {
+    let mut sessions = state.sessions.lock().map_err(|e| e.to_string())?;
+    let session = sessions.get_mut(&id).ok_or_else(|| "终端不存在".to_string())?;
+    session
+        .writer
+        .write_all(data.as_bytes())
+        .map_err(|e| format!("写入终端失败: {}", e))
+}
+
+/// 调整终端尺寸
+#[tauri::command]
+fn term_resize(
+    state: tauri::State<'_, TerminalState>,
+    id: String,
+    cols: u16,
+    rows: u16,
+) -> Result<(), String> {
+    let mut sessions = state.sessions.lock().map_err(|e| e.to_string())?;
+    let session = sessions.get_mut(&id).ok_or_else(|| "终端不存在".to_string())?;
+    session
+        .master
+        .resize(PtySize {
+            rows,
+            cols,
+            pixel_width: 0,
+            pixel_height: 0,
+        })
+        .map_err(|e| format!("调整终端尺寸失败: {}", e))
+}
+
+/// 关闭终端会话（结束子进程）
+#[tauri::command]
+fn term_close(state: tauri::State<'_, TerminalState>, id: String) -> Result<(), String> {
+    let mut sessions = state.sessions.lock().map_err(|e| e.to_string())?;
+    if let Some(mut session) = sessions.remove(&id) {
+        let _ = session.child.kill();
+    }
+    Ok(())
+}
+
+/// 列出当前会话 id
+#[tauri::command]
+fn term_list(state: tauri::State<'_, TerminalState>) -> Result<Vec<String>, String> {
+    let sessions = state.sessions.lock().map_err(|e| e.to_string())?;
+    Ok(sessions.keys().cloned().collect())
+}
+
+/// 重新挂载时返回会话的滚动缓冲区（用于回放历史输出）
+#[tauri::command]
+fn term_attach(state: tauri::State<'_, TerminalState>, id: String) -> Result<String, String> {
+    let sessions = state.sessions.lock().map_err(|e| e.to_string())?;
+    let session = sessions.get(&id).ok_or_else(|| "终端不存在".to_string())?;
+    let guard = session.buffer.lock().map_err(|e| e.to_string())?;
+    Ok(String::from_utf8_lossy(&guard).to_string())
+}
+
+/// 应用退出时结束所有终端子进程
+fn kill_all_terminals(state: &TerminalState) {
+    let mut sessions = match state.sessions.lock() {
+        Ok(g) => g,
+        Err(_) => return,
+    };
+    for (_, session) in sessions.iter_mut() {
+        let _ = session.child.kill();
+    }
+    sessions.clear();
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
         .manage(AppState {
             data_dir: Mutex::new(None),
+        })
+        .manage(TerminalState {
+            sessions: Mutex::new(HashMap::new()),
         })
         .invoke_handler(tauri::generate_handler![
             get_app_info,
@@ -434,13 +666,28 @@ pub fn run() {
             write_workbench_settings,
             read_calendar_events,
             write_calendar_events,
-            open_dir_with_cmd
+            open_dir_with_cmd,
+            term_detect_shell,
+            term_create,
+            term_write,
+            term_resize,
+            term_close,
+            term_list,
+            term_attach
         ])
         .setup(|_app| {
             // 注释掉自动打开 DevTools，避免每次 tauri dev 都弹出 F12 控制台
             // 如需手动打开，在窗口中按 F12 即可
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running Buffer");
+        .build(tauri::generate_context!())
+        .expect("error while building Buffer");
+
+    app.run(|app_handle, event| {
+        if let tauri::RunEvent::Exit = event {
+            if let Some(state) = app_handle.try_state::<TerminalState>() {
+                kill_all_terminals(&state);
+            }
+        }
+    });
 }

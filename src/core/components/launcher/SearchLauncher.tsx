@@ -10,6 +10,8 @@ const ICONS: Record<string, string> = {
   file: "[]",
   data: "{}",
   tool: "+",
+  dshweb: "◎",
+  terminal: ">_",
 };
 
 interface Props {
