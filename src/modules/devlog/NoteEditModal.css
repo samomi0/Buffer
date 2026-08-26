@@ -125,6 +125,7 @@
   top: calc(100% + 4px);
   left: 0;
   min-width: 160px;
+  max-height: min(320px, 48vh);
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -133,6 +134,7 @@
   padding: 4px;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 .note-modal-tag-empty {

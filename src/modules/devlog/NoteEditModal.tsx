@@ -218,6 +218,17 @@ export function NoteEditModal({ note, allTags, progressList, dataDir, onUpdate, 
     });
   }
 
+  function handleProgressSelect(progressId: string | undefined) {
+    if (localNote.progressId === progressId) {
+      setShowProgressPicker(false);
+      return;
+    }
+    const now = new Date();
+    const dateKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    patchNote({ progressId, progressAt: dateKey });
+    setShowProgressPicker(false);
+  }
+
   function toggleTag(tagId: string) {
     patchNote({
       tags: localNote.tags.includes(tagId)
@@ -485,7 +496,7 @@ export function NoteEditModal({ note, allTags, progressList, dataDir, onUpdate, 
                     <div className="note-modal-progress-dropdown">
                       <button
                         className={`note-modal-progress-option ${!localNote.progressId ? "active" : ""}`}
-                        onClick={() => { patchNote({ progressId: undefined }); setShowProgressPicker(false); }}
+                        onClick={() => handleProgressSelect(undefined)}
                       >
                         <span className="note-modal-progress-dot note-modal-progress-dot--none" />
                         无
@@ -494,7 +505,7 @@ export function NoteEditModal({ note, allTags, progressList, dataDir, onUpdate, 
                         <button
                           key={p.id}
                           className={`note-modal-progress-option ${localNote.progressId === p.id ? "active" : ""}`}
-                          onClick={() => { patchNote({ progressId: p.id }); setShowProgressPicker(false); }}
+                          onClick={() => handleProgressSelect(p.id)}
                         >
                           <span className="note-modal-progress-dot" style={{ background: p.color }} />
                           {p.name}

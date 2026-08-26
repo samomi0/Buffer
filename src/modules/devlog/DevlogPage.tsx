@@ -7,9 +7,12 @@ import { NoteGrid } from "./NoteGrid";
 import { NoteEditModal } from "./NoteEditModal";
 import "./DevlogPage.css";
 
-function todayTitle(): string {
-  const d = new Date();
+function formatDateKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function todayTitle(): string {
+  return formatDateKey(new Date());
 }
 
 function initialContent(): object {
@@ -130,7 +133,9 @@ export function DevlogPage() {
   function handleProgressChange(noteId: string, progressId: string | undefined) {
     const n = notes.find((x) => x.id === noteId);
     if (!n) return;
-    handleUpdateNote({ ...n, progressId, updatedAt: new Date().toISOString() });
+    if (n.progressId === progressId) return;
+    const now = new Date();
+    handleUpdateNote({ ...n, progressId, progressAt: formatDateKey(now), updatedAt: now.toISOString() });
   }
 
   async function handleAddTag(tag: DevlogTag) {

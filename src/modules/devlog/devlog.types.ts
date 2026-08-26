@@ -33,6 +33,7 @@ export interface DevlogNote {
   updatedAt: string;
   archived: boolean;
   progressId?: string;
+  progressAt?: string;
 }
 
 export type TimeFilter =
@@ -90,13 +91,14 @@ export function getDateRange(filter: TimeFilter, now = new Date()): [Date, Date]
 
 export function timeFilterLabel(type: TimeFilter["type"]): string {
   const now = new Date();
+  const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const labels: Record<TimeFilter["type"], string> = {
     all: "全部",
     today: "今天",
     "this-week": "本周",
     "last-week": "上周",
     "this-month": `${now.getMonth() + 1}月`,
-    "last-month": (() => { const d = new Date(now); d.setMonth(d.getMonth() - 1); return `${d.getMonth() + 1}月`; })(),
+    "last-month": `${lastMonthDate.getMonth() + 1}月`,
     "this-quarter": `${Math.floor(now.getMonth() / 3) + 1}季度`,
     "this-year": `${now.getFullYear()}年`,
     custom: "指定时间段",
