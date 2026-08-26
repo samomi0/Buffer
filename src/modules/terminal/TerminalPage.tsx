@@ -128,7 +128,12 @@ export function TerminalPage() {
       }
       termRef.current = { term, fit };
 
+      // 回放历史输出时，xterm 会对缓冲里的终端查询序列（如 ESC[6n 光标位置查询）
+      // 自动应答（ESC[行;列R），这些应答经 onData 转发给后端会变成多余输入
+      // （表现为重进终端页后输入行多出一个 "R"）。回放期间屏蔽 onData 转发。
+      let replaying = false;
       term.onData((data) => {
+        if (replaying) return;
         void termWrite(id, data);
       });
       term.onResize(({ cols, rows }) => {
@@ -148,10 +153,14 @@ export function TerminalPage() {
       }
       outputUnlistenRef.current = unlisten;
 
-      // 回放历史输出
+      // 回放历史输出（term.write 同步解析，回放期间的自动应答一并丢弃）
       try {
         const buffer = await termAttach(id);
-        if (attachSeqRef.current === seq && buffer) term.write(buffer);
+        if (attachSeqRef.current === seq && buffer) {
+          replaying = true;
+          term.write(buffer);
+          replaying = false;
+        }
       } catch {
         /* ignore */
       }
