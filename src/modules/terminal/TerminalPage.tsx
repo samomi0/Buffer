@@ -18,28 +18,31 @@ import "./TerminalPage.css";
 let shellCache: string | null = null;
 
 /**
- * 模块级初始化单例：StrictMode 下 effect 会执行两次，
- * 通过共享同一个 Promise 保证只创建一次首个终端。
+ * 首次终端的自动创建去重：StrictMode 下初始化 effect 会执行两次，
+ * 通过共享同一个进行中的 Promise 保证只创建一个；创建完成后立即清空，
+ * 避免返回已删除的过期 id（删除/新建终端后重进页面必须重新查询后端）。
  */
-const initState: { promise: Promise<string[] | null> | null } = { promise: null };
+let autoCreatePromise: Promise<string | null> | null = null;
 
-function startInit(createBackend: (id: string) => Promise<void>): Promise<string[] | null> {
-  if (!initState.promise) {
-    initState.promise = (async () => {
+async function ensureFirstTerminal(
+  createBackend: (id: string) => Promise<void>,
+): Promise<string | null> {
+  if (!autoCreatePromise) {
+    autoCreatePromise = (async () => {
       try {
-        let list = await termList();
-        if (list.length === 0) {
-          const id = crypto.randomUUID();
-          await createBackend(id);
-          list = [id];
-        }
-        return list;
+        const existing = await termList();
+        if (existing.length > 0) return null;
+        const id = crypto.randomUUID();
+        await createBackend(id);
+        return id;
       } catch {
         return null;
       }
-    })();
+    })().finally(() => {
+      autoCreatePromise = null;
+    });
   }
-  return initState.promise;
+  return autoCreatePromise;
 }
 
 export function TerminalPage() {
@@ -131,6 +134,8 @@ export function TerminalPage() {
       // 回放历史输出时，xterm 会对缓冲里的终端查询序列（如 ESC[6n 光标位置查询）
       // 自动应答（ESC[行;列R），这些应答经 onData 转发给后端会变成多余输入
       // （表现为重进终端页后输入行多出一个 "R"）。回放期间屏蔽 onData 转发。
+      // 注意：xterm 的 write 是异步批处理（WriteBuffer 经 setTimeout 才解析），
+      // 因此必须等 onWriteParsed 确认回放真正解析完成后再恢复转发。
       let replaying = false;
       term.onData((data) => {
         if (replaying) return;
@@ -153,17 +158,29 @@ export function TerminalPage() {
       }
       outputUnlistenRef.current = unlisten;
 
-      // 回放历史输出（term.write 同步解析，回放期间的自动应答一并丢弃）
+      // 回放历史输出，回放期间的自动应答一并丢弃
       try {
         const buffer = await termAttach(id);
         if (attachSeqRef.current === seq && buffer) {
+          const replayDone = new Promise<void>((resolve) => {
+            const sub = term.onWriteParsed(() => {
+              sub.dispose();
+              resolve();
+            });
+          });
           replaying = true;
           term.write(buffer);
-          replaying = false;
+          // 兜底超时：attach 被取代或极端情况下 onWriteParsed 不触发时避免悬挂
+          await Promise.race([
+            replayDone,
+            new Promise<void>((resolve) => window.setTimeout(resolve, 1000)),
+          ]);
+          if (attachSeqRef.current !== seq) return;
         }
       } catch {
         /* ignore */
       }
+      replaying = false;
 
       const ro = new ResizeObserver(() => {
         try {
@@ -203,22 +220,40 @@ export function TerminalPage() {
     [resolveShell, terminalConfig.cwd],
   );
 
-  /* ── 初始化：恢复已有会话或自动创建第一个 ───────────────── */
+  /* ── 初始化：每次挂载都重新查询后端会话（避免使用过期的缓存列表），
+     为空时自动创建第一个终端（StrictMode 并发由 ensureFirstTerminal 去重） ── */
   useEffect(() => {
     let cancelled = false;
-    void startInit(createBackend)
-      .then((list) => {
-        if (cancelled || !list) return;
+    void (async () => {
+      try {
+        let list: string[];
+        try {
+          list = await termList();
+        } catch {
+          list = [];
+        }
+        if (list.length === 0) {
+          const id = await ensureFirstTerminal(createBackend);
+          if (id) list = [id];
+          if (list.length === 0) {
+            // 并发下另一路已创建，重新查询后端
+            try {
+              list = await termList();
+            } catch {
+              list = [];
+            }
+          }
+        }
+        if (cancelled) return;
         setIds(list);
-        setActiveId(list[0]);
+        setActiveId(list[0] ?? null);
         setError(null);
-      })
-      .catch((e) => {
+      } catch (e) {
         if (!cancelled) setError(String(e));
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setReady(true);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
