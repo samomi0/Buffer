@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAppStore, type ToolManifest, DEFAULT_DSH_CONFIG, DEFAULT_TERMINAL_CONFIG } from "./core/stores/appStore";
+import { useAppStore, type ToolManifest, type AppTheme, DEFAULT_DSH_CONFIG, DEFAULT_TERMINAL_CONFIG } from "./core/stores/appStore";
 import { AppTopBar } from "./core/components/dashboard/AppTopBar";
 import { DashboardPage } from "./core/components/dashboard/DashboardPage";
 import { ToolFrame } from "./core/components/tools/ToolFrame";
@@ -69,6 +69,21 @@ function App() {
   const setDevlogProgress = useAppStore((s) => s.setDevlogProgress);
   const setDshConfig = useAppStore((s) => s.setDshConfig);
   const setTerminalConfig = useAppStore((s) => s.setTerminalConfig);
+  const theme = useAppStore((s) => s.theme);
+  const setTheme = useAppStore((s) => s.setTheme);
+
+  /* ── 应用并缓存主题（深色模式） ─────────────────────────── */
+  useEffect(() => {
+    const applyTheme = (t: AppTheme) => {
+      document.documentElement.dataset.theme = t;
+      try {
+        localStorage.setItem("buffer:theme", t);
+      } catch {
+        /* ignore */
+      }
+    };
+    applyTheme(theme);
+  }, [theme]);
 
 
   const getDefaultTopbarToolIds = (items: ToolManifest[]) => items.map((tool) => tool.id);
@@ -121,6 +136,9 @@ function App() {
           }
           if (settings.terminal) {
             setTerminalConfig({ ...DEFAULT_TERMINAL_CONFIG, ...settings.terminal });
+          }
+          if (settings.appearance?.theme === "dark" || settings.appearance?.theme === "light") {
+            setTheme(settings.appearance.theme);
           }
         }
 

@@ -11,6 +11,12 @@ export interface TerminalSettingsConfig {
   cwd?: string;
 }
 
+/** 外观配置（持久化到工作台设置） */
+export interface AppearanceSettingsConfig {
+  /** 界面主题：light=浅色，dark=深色 */
+  theme?: "light" | "dark";
+}
+
 export interface WorkbenchSettings {
   topbarToolIds?: string[];
   /** 开发手记标签快速打开使用的命令，默认为 code */
@@ -20,6 +26,8 @@ export interface WorkbenchSettings {
   dsh?: DshSettingsConfig;
   /** 终端配置 */
   terminal?: TerminalSettingsConfig;
+  /** 外观配置（深色模式等） */
+  appearance?: AppearanceSettingsConfig;
 }
 
 export async function readWorkbenchSettings(dataDir: string): Promise<WorkbenchSettings> {

@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback, useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 import { readWorkbenchSettings, writeWorkbenchSettings } from "../../lib/workbenchSettings";
 import { syncHolidaysForYear } from "../../lib/holidaySync";
-import { normalizeTopbarToolIds, useAppStore, type ToolManifest, type DevlogProgress, type DshConfig, type TerminalConfig, DEFAULT_DEVLOG_PROGRESS } from "../../stores/appStore";
+import { normalizeTopbarToolIds, useAppStore, type ToolManifest, type DevlogProgress, type DshConfig, type TerminalConfig, type AppTheme, DEFAULT_DEVLOG_PROGRESS } from "../../stores/appStore";
 import { DshWebSettingsPanel, TerminalSettingsPanel } from "./IntegrationSettings";
 import "./SettingsPage.css";
 
@@ -51,6 +51,21 @@ export function SettingsPage({ dataDir, onDataDirChange }: Props) {
     try {
       const settings = await readWorkbenchSettings(dataDir);
       await writeWorkbenchSettings(dataDir, { ...settings, terminal: next });
+    } catch { /* ignore */ }
+  };
+
+  const theme = useAppStore((s) => s.theme);
+  const setTheme = useAppStore((s) => s.setTheme);
+
+  const changeTheme = async (next: AppTheme) => {
+    setTheme(next);
+    if (!dataDir) return;
+    try {
+      const settings = await readWorkbenchSettings(dataDir);
+      await writeWorkbenchSettings(dataDir, {
+        ...settings,
+        appearance: { ...(settings.appearance ?? {}), theme: next },
+      });
     } catch { /* ignore */ }
   };
 
@@ -422,6 +437,45 @@ export function SettingsPage({ dataDir, onDataDirChange }: Props) {
         />
       ),
     },
+    {
+      key: "appearance",
+      node: (
+        <section className="settings-panel">
+          <div className="settings-panel-head compact">
+            <div>
+              <h2>外观</h2>
+              <p>切换客户端的浅色与深色主题。</p>
+            </div>
+          </div>
+
+          <div className="settings-field-card">
+            <span className="settings-field-label">主题</span>
+            <div className="appearance-theme-switch" role="radiogroup" aria-label="主题">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={theme === "light"}
+                className={`appearance-theme-opt ${theme === "light" ? "active" : ""}`}
+                onClick={() => void changeTheme("light")}
+                title="浅色模式"
+              >
+                <SunIcon /> 浅色
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={theme === "dark"}
+                className={`appearance-theme-opt ${theme === "dark" ? "active" : ""}`}
+                onClick={() => void changeTheme("dark")}
+                title="深色模式"
+              >
+                <MoonIcon /> 深色
+              </button>
+            </div>
+          </div>
+        </section>
+      ),
+    },
   ];
 
   const allocation = useMemo(() => {
@@ -483,6 +537,23 @@ function FolderIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+function SunIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="4.2" />
+      <path d="M12 2v2.2M12 19.8V22M2 12h2.2M19.8 12H22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
     </svg>
   );
 }

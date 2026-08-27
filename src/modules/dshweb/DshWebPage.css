@@ -3,7 +3,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: var(--bg-card);
   animation: fadeIn 0.25s ease;
 }
 
@@ -12,5 +12,5 @@
   min-height: 0;
   width: 100%;
   border: none;
-  background: #ffffff;
+  background: var(--bg-card);
 }

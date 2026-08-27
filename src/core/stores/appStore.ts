@@ -59,6 +59,21 @@ export interface RecentTool {
 const RECENT_KEY = "buffer:recent";
 const MAX_RECENT = 12;
 
+/** 界面主题 */
+export type AppTheme = "light" | "dark";
+
+const THEME_KEY = "buffer:theme";
+
+function loadTheme(): AppTheme {
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === "light" || saved === "dark") return saved;
+  } catch {
+    /* ignore */
+  }
+  return "light";
+}
+
 function loadRecent(): RecentTool[] {
   try {
     return JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
@@ -105,6 +120,9 @@ interface AppState {
   /** 终端配置 */
   terminalConfig: TerminalConfig;
   setTerminalConfig: (config: TerminalConfig) => void;
+  /** 界面主题（浅色/深色） */
+  theme: AppTheme;
+  setTheme: (theme: AppTheme) => void;
 
   setTools: (tools: ToolManifest[]) => void;
   setDataDir: (dir: string) => void;
@@ -132,6 +150,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   devlogProgress: DEFAULT_DEVLOG_PROGRESS,
   dshConfig: DEFAULT_DSH_CONFIG,
   terminalConfig: DEFAULT_TERMINAL_CONFIG,
+  theme: loadTheme(),
 
   setTools: (tools) => set((state) => ({
     tools,
@@ -175,6 +194,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setDevlogProgress: (list) => set({ devlogProgress: list }),
   setDshConfig: (config) => set({ dshConfig: config }),
   setTerminalConfig: (config) => set({ terminalConfig: config }),
+  setTheme: (theme) => set({ theme }),
 
   openTool: (id) => get().pushTool(id),
   closeTool: () => get().popTool(),

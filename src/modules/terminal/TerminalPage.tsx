@@ -17,6 +17,56 @@ import "./TerminalPage.css";
 
 let shellCache: string | null = null;
 
+/** xterm 配色：跟随应用主题（与全局 CSS 变量的浅色/深色一致） */
+const TERM_THEMES = {
+  light: {
+    background: "#ffffff",
+    foreground: "#1f2937",
+    cursor: "#2563eb",
+    cursorAccent: "#ffffff",
+    selectionBackground: "rgba(37, 99, 235, 0.22)",
+    black: "#1f2937",
+    red: "#dc2626",
+    green: "#16a34a",
+    yellow: "#d97706",
+    blue: "#2563eb",
+    magenta: "#7c3aed",
+    cyan: "#0891b2",
+    white: "#e5e7eb",
+    brightBlack: "#9ca3af",
+    brightRed: "#ef4444",
+    brightGreen: "#22c55e",
+    brightYellow: "#f59e0b",
+    brightBlue: "#3b82f6",
+    brightMagenta: "#a78bfa",
+    brightCyan: "#06b6d4",
+    brightWhite: "#ffffff",
+  },
+  dark: {
+    background: "#151e2e",
+    foreground: "#e7edf6",
+    cursor: "#60a5fa",
+    cursorAccent: "#0d1522",
+    selectionBackground: "rgba(96, 165, 250, 0.28)",
+    black: "#1e2a3e",
+    red: "#f87171",
+    green: "#4ade80",
+    yellow: "#fbbf24",
+    blue: "#60a5fa",
+    magenta: "#c084fc",
+    cyan: "#22d3ee",
+    white: "#cbd5e1",
+    brightBlack: "#6d7d96",
+    brightRed: "#f87171",
+    brightGreen: "#4ade80",
+    brightYellow: "#fbbf24",
+    brightBlue: "#60a5fa",
+    brightMagenta: "#c084fc",
+    brightCyan: "#22d3ee",
+    brightWhite: "#ffffff",
+  },
+} as const;
+
 /**
  * 首次终端的自动创建去重：StrictMode 下初始化 effect 会执行两次，
  * 通过共享同一个进行中的 Promise 保证只创建一个；创建完成后立即清空，
@@ -48,6 +98,7 @@ async function ensureFirstTerminal(
 export function TerminalPage() {
   const closeTool = useAppStore((s) => s.closeTool);
   const terminalConfig = useAppStore((s) => s.terminalConfig);
+  const theme = useAppStore((s) => s.theme);
 
   const [ids, setIds] = useState<string[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -97,29 +148,7 @@ export function TerminalPage() {
         lineHeight: 1.3,
         fontFamily: '"Cascadia Code", "JetBrains Mono", "Fira Code", Consolas, monospace',
         scrollback: 5000,
-        theme: {
-          background: "#ffffff",
-          foreground: "#1f2937",
-          cursor: "#2563eb",
-          cursorAccent: "#ffffff",
-          selectionBackground: "rgba(37, 99, 235, 0.22)",
-          black: "#1f2937",
-          red: "#dc2626",
-          green: "#16a34a",
-          yellow: "#d97706",
-          blue: "#2563eb",
-          magenta: "#7c3aed",
-          cyan: "#0891b2",
-          white: "#e5e7eb",
-          brightBlack: "#9ca3af",
-          brightRed: "#ef4444",
-          brightGreen: "#22c55e",
-          brightYellow: "#f59e0b",
-          brightBlue: "#3b82f6",
-          brightMagenta: "#a78bfa",
-          brightCyan: "#06b6d4",
-          brightWhite: "#ffffff",
-        },
+        theme: TERM_THEMES[theme === "dark" ? "dark" : "light"],
       });
       const fit = new FitAddon();
       term.loadAddon(fit);
@@ -173,7 +202,7 @@ export function TerminalPage() {
       ro.observe(container);
       resizeObserverRef.current = ro;
     },
-    [detachTerm],
+    [detachTerm, theme],
   );
 
   const resolveShell = useCallback(async (): Promise<string> => {

@@ -1,4 +1,4 @@
 .settings-btn-ghost {
   background: transparent;
-  color: #475569;
+  color: var(--text-sub);
 }
