@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useAppStore } from "../../stores/appStore";
 import { syncHolidaysForYear } from "../../lib/holidaySync";
@@ -124,6 +124,8 @@ export function CalendarModule() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const monthRefs = useRef<Record<string, HTMLElement | null>>({});
+  const shellRef = useRef<HTMLElement>(null);
+  const mainRef = useRef<HTMLDivElement>(null);
   const didInitialScrollRef = useRef(false);
   const pendingPrependRef = useRef<string | null>(null);
 
@@ -213,18 +215,6 @@ export function CalendarModule() {
   );
 
   useEffect(() => {
-    if (didInitialScrollRef.current) return;
-    const key = formatMonthKey(initialMonth);
-    const scroller = scrollRef.current;
-    const el = monthRefs.current[key];
-    if (scroller && el) {
-      scroller.scrollTop = Math.max(el.offsetTop - 12, 0);
-      didInitialScrollRef.current = true;
-      setFocusMonth(initialMonth);
-    }
-  }, [initialMonth, months]);
-
-  useEffect(() => {
     if (!pendingPrependRef.current) return;
     const scroller = scrollRef.current;
     const first = monthRefs.current[pendingPrependRef.current];
@@ -234,6 +224,64 @@ export function CalendarModule() {
     }
     pendingPrependRef.current = null;
   }, [months]);
+
+  // 大日历格尺寸：格高优先满足“一整个月（最多 6 周）基本可见”，
+  // 格宽 = 格高 × 1.4（宽 > 高，比例更自然）。据此确定主日历宽度，
+  // 剩余横向空间交给左侧栏（“最近事件”）。
+  // 用 useLayoutEffect，保证先按真实行高定好布局，再执行下方“今天居中”。
+  useLayoutEffect(() => {
+    const applyCellLayout = () => {
+      const shellEl = shellRef.current;
+      const mainEl = mainRef.current;
+      const scrollEl = scrollRef.current;
+      if (!shellEl || !mainEl || !scrollEl) return;
+      const gridEl = mainEl.querySelector<HTMLElement>(".calendar-month-grid");
+      const mainW = mainEl.getBoundingClientRect().width;
+      const gridW = gridEl ? gridEl.getBoundingClientRect().width : mainW - 36;
+      // main 卡片除格子以外的“壳”（左右内边距 + 边框 + 滚动条等）
+      const chrome = Math.max(mainW - gridW, 36);
+      const shellW = shellEl.getBoundingClientRect().width;
+      const gap = parseFloat(getComputedStyle(shellEl).columnGap) || 12;
+      const viewportH = scrollEl.clientHeight;
+      const ratio = 1.4; // 格宽 / 格高
+      const minRowH = 88;
+      // 按高度定行高：让 6 周基本放得下
+      let rowH = Math.max(minRowH, Math.floor((viewportH - 8) / 6));
+      let cellW = Math.round(rowH * ratio);
+      let mainWidth = chrome + 7 * cellW;
+      // 窗口偏窄时：以可用宽度为上限反推行高
+      const maxMainW = Math.max(0, shellW - 220 - gap);
+      if (mainWidth > maxMainW) {
+        cellW = Math.max(72, Math.floor((maxMainW - chrome) / 7));
+        rowH = Math.max(minRowH, Math.round(cellW / ratio));
+        mainWidth = chrome + 7 * cellW;
+      }
+      shellEl.style.setProperty("--row-h", `${rowH}px`);
+      shellEl.style.setProperty("--main-w", `${Math.round(mainWidth)}px`);
+    };
+    applyCellLayout();
+    const shellEl = shellRef.current;
+    if (!shellEl) return;
+    const observer = new ResizeObserver(applyCellLayout);
+    observer.observe(shellEl);
+    return () => observer.disconnect();
+  }, []);
+
+  // 首页进入/重进时：在首次绘制前就把今天的格子放在可视区中间，
+  // 避免先显示月初再跳动（不居中、抖动）。放在尺寸布局之后执行。
+  useLayoutEffect(() => {
+    if (didInitialScrollRef.current) return;
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+    const cell = scroller.querySelector<HTMLElement>(".calendar-grid-cell.today");
+    if (!cell) return;
+    didInitialScrollRef.current = true;
+    const sRect = scroller.getBoundingClientRect();
+    const cRect = cell.getBoundingClientRect();
+    const delta = cRect.top - sRect.top + cRect.height / 2 - scroller.clientHeight / 2;
+    scroller.scrollTop = Math.max(scroller.scrollTop + delta, 0);
+    setFocusMonth(initialMonth);
+  }, [initialMonth, months]);
 
   useEffect(() => {
     if (!editor.open) {
@@ -295,6 +343,27 @@ export function CalendarModule() {
     });
   };
 
+  // “今天”按钮：确保今天的月份已加载后，单次平滑滚动直接让今天的
+  // 格子垂直居中（格子的垂直中线 = 日历可视区域高度的一半）。
+  // 不先跳到月初，避免“从上到下”的抖动。
+  const goToToday = () => {
+    const monthStart = startOfMonth(today);
+    ensureMonthAvailable(monthStart);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const scroller = scrollRef.current;
+        if (!scroller) return;
+        const cell = scroller.querySelector<HTMLElement>(".calendar-grid-cell.today");
+        if (!cell) return;
+        const sRect = scroller.getBoundingClientRect();
+        const cRect = cell.getBoundingClientRect();
+        const delta = cRect.top - sRect.top + cRect.height / 2 - scroller.clientHeight / 2;
+        const target = Math.max(scroller.scrollTop + delta, 0);
+        scroller.scrollTo({ top: target, behavior: "smooth" });
+      });
+    });
+  };
+
   const handleScroll = () => {
     const scroller = scrollRef.current;
     if (!scroller || months.length === 0) return;
@@ -314,17 +383,30 @@ export function CalendarModule() {
 
     const viewportTop = scroller.scrollTop;
     const viewportBottom = viewportTop + scroller.clientHeight;
-    let bestKey = months[0];
-    let bestArea = 0;
+    const sRect = scroller.getBoundingClientRect();
 
+    // 左上角年月：取当前“实际可见天数”最多的那个月（而非单纯按区块重叠面积）
+    let bestKey = months[0];
+    let bestCount = -1;
     for (const monthKey of months) {
       const monthEl = monthRefs.current[monthKey];
       if (!monthEl) continue;
-      const top = monthEl.offsetTop;
-      const bottom = top + monthEl.offsetHeight;
-      const overlap = Math.min(bottom, viewportBottom) - Math.max(top, viewportTop);
-      if (overlap > bestArea) {
-        bestArea = overlap;
+      const mRect = monthEl.getBoundingClientRect();
+      const mTop = mRect.top - sRect.top + viewportTop;
+      const mBottom = mRect.bottom - sRect.top + viewportTop;
+      if (mBottom <= viewportTop || mTop >= viewportBottom) continue;
+      const dayCells = monthEl.querySelectorAll<HTMLElement>(
+        ".calendar-grid-cell:not(.calendar-grid-cell-empty)"
+      );
+      let count = 0;
+      for (const cell of dayCells) {
+        const r = cell.getBoundingClientRect();
+        const cTop = r.top - sRect.top + viewportTop;
+        const cBottom = r.bottom - sRect.top + viewportTop;
+        if (cBottom > viewportTop && cTop < viewportBottom) count += 1;
+      }
+      if (count > bestCount) {
+        bestCount = count;
         bestKey = monthKey;
       }
     }
@@ -428,7 +510,7 @@ export function CalendarModule() {
   };
 
   return (
-    <section className="calendar-shell">
+    <section className="calendar-shell" ref={shellRef}>
       <aside className="calendar-sidebar">
         <div className="calendar-sidebar-card frosted">
           <div className="calendar-sidebar-header">
@@ -537,14 +619,14 @@ export function CalendarModule() {
         </div>
       </aside>
 
-      <div className="calendar-main frosted">
+      <div className="calendar-main frosted" ref={mainRef}>
         <div className="calendar-main-top">
           <h3>{formatMonthTitle(focusMonth)}</h3>
           <div className="calendar-main-nav">
             <button onClick={() => scrollToMonth(addMonths(focusMonth, -1))} title="上个月">
               <ChevronLeft />
             </button>
-            <button className="calendar-main-today-btn" onClick={() => scrollToMonth(today)} title="今天">
+            <button className="calendar-main-today-btn" onClick={goToToday} title="今天">
               {formatCompactDate(today)}
             </button>
             <button onClick={() => scrollToMonth(addMonths(focusMonth, 1))} title="下个月">
@@ -764,7 +846,7 @@ export function CalendarModule() {
                     onClick={() => {
                       const text = weeklyReportMode === "markdown"
                         ? weeklyReportMarkdown
-                        : buildWeeklyReportPlainText(weeklyReportData, weekStart, weekEnd);
+                        : buildWeeklyReportRichCopyText(weeklyReportData, devlogTagMap, weekStart, weekEnd);
                       navigator.clipboard.writeText(text).then(() => {
                         setReportCopied(true);
                         setTimeout(() => setReportCopied(false), 2000);
@@ -1208,7 +1290,12 @@ function buildWeeklyReportMarkdown(
   return body.trimEnd();
 }
 
-function buildWeeklyReportPlainText(data: WeeklyReportData, weekStart: Date, weekEnd: Date): string {
+function buildWeeklyReportRichCopyText(
+  data: WeeklyReportData,
+  tagMap: Record<string, string>,
+  weekStart: Date,
+  weekEnd: Date
+): string {
   if (data.total === 0) {
     return `本周工作周报\n${formatFullDate(weekStart)} ~ ${formatFullDate(weekEnd)}\n\n本周暂无进度切换记录`;
   }
@@ -1217,11 +1304,13 @@ function buildWeeklyReportPlainText(data: WeeklyReportData, weekStart: Date, wee
   for (const group of data.groups) {
     text += `\n【${group.name}】\n`;
     for (const item of group.items) {
-      text += `${formatReportTime(item.progressAt)} ${item.title}\n`;
-      const content = tipTapToPlainText(item.content).trim();
-      if (content) {
-        text += `${content.replace(/\n+/g, " ")}\n`;
+      // 富文本复制：只保留标题 + 标签，不复制正文内容
+      text += `${formatReportTime(item.progressAt)} ${item.title}`;
+      const tagNames = item.tags.map((id) => tagMap[id]).filter(Boolean);
+      if (tagNames.length > 0) {
+        text += ` ｜ 标签：${tagNames.join("、")}`;
       }
+      text += "\n";
     }
   }
   return text.trimEnd();

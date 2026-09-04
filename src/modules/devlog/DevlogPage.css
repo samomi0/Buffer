@@ -86,24 +86,67 @@
   border-bottom: none;
 }
 
-.devlog-sidebar-section-title {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-muted);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 0 2px 6px;
+/* ── 侧栏工具行：归档 / 重置 圆角按钮 ────────────────────────── */
+.devlog-sidebar-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 6px;
+  padding: 10px 10px 8px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
-/* ── 归档开关 (iOS 风格) ────────────────────────────────────── */
-.devlog-archive-toggle-row {
-  display: flex;
+.devlog-archive-btn,
+.devlog-reset-btn {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font-size: 12px;
+  font-family: var(--font-ui);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+  flex-shrink: 0;
+}
+
+/* 归档：不生效（未查看归档）时暗淡；生效时明亮 */
+.devlog-archive-btn {
+  background: var(--bg-elevated);
+  border-color: var(--border);
+  color: var(--text-secondary);
+  opacity: 0.72;
+}
+.devlog-archive-btn:hover {
+  opacity: 1;
+  color: var(--text);
+}
+.devlog-archive-btn.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+  opacity: 1;
+}
+.devlog-archive-btn.active .devlog-archive-icon {
+  color: var(--accent);
+}
+
+/* 重置：与归档同风格 */
+.devlog-reset-btn {
+  background: var(--bg-elevated);
+  border-color: var(--border);
+  color: var(--text-secondary);
+  opacity: 0.72;
+}
+.devlog-reset-btn:hover {
+  opacity: 1;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-color: var(--accent);
 }
 
 /* 每个标签的关联目录快速打开按钮（始终占位，无目录时禁用） */
@@ -127,70 +170,6 @@
 .devlog-tag-open-btn:disabled {
   opacity: 0.18;
   cursor: not-allowed;
-}
-
-.devlog-archive-toggle-label {
-  font-size: 12px;
-  color: var(--text);
-  font-family: var(--font-ui);
-}
-
-.devlog-archive-toggle {
-  position: relative;
-  width: 38px;
-  height: 22px;
-  border-radius: 11px;
-  border: none;
-  background: var(--border);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.2s ease;
-  padding: 0;
-}
-.devlog-archive-toggle.active {
-  background: var(--accent);
-}
-
-.devlog-toggle-knob {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0,0,0,.15);
-  transition: transform 0.2s ease;
-  pointer-events: none;
-}
-.devlog-archive-toggle.active .devlog-toggle-knob {
-  transform: translateX(16px);
-}
-
-/* ── 重置筛选按钮（标签标题行右侧） ──────────────────────────────── */
-.devlog-sidebar-section-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.devlog-reset-tag-filters-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 6px;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 10px;
-  font-family: var(--font-ui);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s ease;
-}
-.devlog-reset-tag-filters-btn:hover {
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .devlog-sidebar-all-row {
@@ -338,22 +317,27 @@
   min-width: 0;
 }
 
-/* 搜索栏 */
-.devlog-search-bar {
+/* 顶部工具行：时间筛选 + 搜索 + 新建，拼成一行 */
+.devlog-toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
+  gap: 10px;
+  padding: 8px 14px;
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
+/* 搜索框缩短（不占满整行），放在时间筛选右侧 */
 .devlog-search-input-wrap {
-  flex: 1;
   position: relative;
   display: flex;
   align-items: center;
+  flex: 0 1 220px;
+  min-width: 130px;
+  max-width: 320px;
+  margin-left: auto;
 }
 
 .devlog-search-icon {
@@ -420,16 +404,14 @@
 .devlog-new-btn:focus { outline: none !important; }
 .devlog-new-btn:hover { background: var(--accent-hover); }
 
-/* 时间筛选 */
+/* 时间筛选（随工具行） */
 .devlog-time-filter {
   display: flex;
   align-items: center;
   gap: 3px;
-  padding: 6px 14px;
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   flex-wrap: wrap;
+  row-gap: 4px;
 }
 
 .devlog-time-btn {

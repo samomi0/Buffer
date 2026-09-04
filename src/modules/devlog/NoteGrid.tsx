@@ -84,8 +84,19 @@ export function NoteGrid({
 
   return (
     <div className="devlog-grid-panel">
-      {/* Search + New */}
-      <div className="devlog-search-bar">
+      {/* 时间筛选 + 搜索 + 新建 拼成一行 */}
+      <div className="devlog-toolbar">
+        <div className="devlog-time-filter">
+          {TIME_OPTIONS.map((type) => (
+            <button
+              key={type}
+              className={`devlog-time-btn ${timeFilter.type === type ? "active" : ""}`}
+              onClick={() => handleTimeClick(type)}
+            >
+              {timeFilterLabel(type)}
+            </button>
+          ))}
+        </div>
         <div className="devlog-search-input-wrap">
           <svg className="devlog-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -105,18 +116,6 @@ export function NoteGrid({
         </button>
       </div>
 
-      {/* Time filter */}
-      <div className="devlog-time-filter">
-        {TIME_OPTIONS.map((type) => (
-          <button
-            key={type}
-            className={`devlog-time-btn ${timeFilter.type === type ? "active" : ""}`}
-            onClick={() => handleTimeClick(type)}
-          >
-            {timeFilterLabel(type)}
-          </button>
-        ))}
-      </div>
       {timeFilter.type === "custom" && (
         <div className="devlog-custom-range">
           <input

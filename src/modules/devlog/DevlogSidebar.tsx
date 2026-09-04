@@ -39,7 +39,6 @@ export function DevlogSidebar({
   const [editingTag, setEditingTag] = useState<DevlogTag | null | "new">(null);
   const devlogOpenCmd = useAppStore((s) => s.devlogOpenCmd);
 
-  const totalActive = notes.filter((n) => !n.archived).length;
   const totalArchived = notes.filter((n) => n.archived).length;
 
   function tagNoteCount(tagId: string) {
@@ -64,35 +63,33 @@ export function DevlogSidebar({
 
   return (
     <aside className="devlog-sidebar">
-      {/* ── 归档开关 ─────────────────────────────────────────── */}
-      <div className="devlog-sidebar-section">
-        <div className="devlog-archive-toggle-row">
-          <span className="devlog-archive-toggle-label">查看归档</span>
-          <button
-            className={`devlog-archive-toggle ${showArchived ? "active" : ""}`}
-            onClick={onToggleArchived}
-            role="switch"
-            aria-checked={showArchived}
-          >
-            <span className="devlog-toggle-knob" />
-          </button>
-          <span className="devlog-sidebar-count">{showArchived ? totalArchived : totalActive}</span>
-        </div>
+      {/* ── 归档 / 重置 工具行（替代原“查看归档”开关行 + “标签”标题行）── */}
+      <div className="devlog-sidebar-toolbar">
+        <button
+          className={`devlog-archive-btn ${showArchived ? "active" : ""}`}
+          onClick={onToggleArchived}
+          title={showArchived ? "退出归档" : "查看归档"}
+          aria-pressed={showArchived}
+        >
+          <svg className="devlog-archive-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="21 8 21 21 3 21 3 8" />
+            <rect x="1" y="3" width="22" height="5" rx="1.5" />
+            <line x1="10" y1="12" x2="14" y2="12" />
+          </svg>
+          <span className="devlog-archive-btn-label">查看归档</span>
+          <span className="devlog-sidebar-count">{totalArchived}</span>
+        </button>
+        <button className="devlog-reset-btn" onClick={onResetFilters} title="重置筛选条件">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="1 4 1 10 7 10" />
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+          </svg>
+          <span>重置</span>
+        </button>
       </div>
 
       {/* ── 标签列表 ──────────────────────────────────────────── */}
       <div className="devlog-sidebar-section devlog-sidebar-section--scroll">
-        <div className="devlog-sidebar-section-title">
-          <span>标签</span>
-          <button className="devlog-reset-tag-filters-btn" onClick={onResetFilters} title="重置筛选条件">
-            <svg width="11" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="1 4 1 10 7 10" />
-              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-            </svg>
-            
-          </button>
-        </div>
-
         {[...tags].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)).map((tag) => {
           const state = tagFilters[tag.id] ?? "none";
           return (
