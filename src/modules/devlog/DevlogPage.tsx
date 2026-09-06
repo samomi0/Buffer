@@ -225,6 +225,7 @@ export function DevlogPage() {
         />
         <NoteGrid
           notes={tagFilteredNotes}
+          reportNotes={notes}
           tags={tags}
           progressList={devlogProgress}
           showArchived={showArchived}

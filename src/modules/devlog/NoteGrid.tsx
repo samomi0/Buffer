@@ -2,10 +2,13 @@ import { useState, useMemo, useEffect } from "react";
 import type { DevlogNote, DevlogTag } from "./devlog.types";
 import { TimeFilter, getDateRange, timeFilterLabel, TIME_OPTIONS } from "./devlog.types";
 import { NoteCard } from "./NoteCard";
+import { WeeklyReport } from "./WeeklyReport";
 import type { DevlogProgress } from "../../core/stores/appStore";
 
 interface Props {
   notes: DevlogNote[];
+  /** 全量笔记（含归档、未做标签筛选），仅供周报统计使用 */
+  reportNotes: DevlogNote[];
   tags: DevlogTag[];
   progressList: DevlogProgress[];
   showArchived: boolean;
@@ -33,7 +36,7 @@ function extractText(content: object): string {
 
 /* ── Component ───────────────────────────────────────────────── */
 export function NoteGrid({
-  notes, tags, progressList, showArchived,
+  notes, reportNotes, tags, progressList, showArchived,
   timeFilter, onTimeFilterChange, customFrom, onCustomFromChange, customTo, onCustomToChange,
   onOpenNote, onArchiveNote, onDeleteNote, onProgressChange, onNewNote,
 }: Props) {
@@ -97,6 +100,7 @@ export function NoteGrid({
             </button>
           ))}
         </div>
+        <WeeklyReport notes={reportNotes} tags={tags} progressList={progressList} />
         <div className="devlog-search-input-wrap">
           <svg className="devlog-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />

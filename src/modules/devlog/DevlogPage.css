@@ -329,7 +329,7 @@
   flex-wrap: wrap;
 }
 
-/* 搜索框缩短（不占满整行），放在时间筛选右侧 */
+/* 搜索框缩短（不占满整行），与周报按钮、新建一起靠右排列 */
 .devlog-search-input-wrap {
   position: relative;
   display: flex;
@@ -337,7 +337,6 @@
   flex: 0 1 220px;
   min-width: 130px;
   max-width: 320px;
-  margin-left: auto;
 }
 
 .devlog-search-icon {
@@ -403,6 +402,33 @@
 }
 .devlog-new-btn:focus { outline: none !important; }
 .devlog-new-btn:hover { background: var(--accent-hover); }
+
+/* 本周周报按钮（位于搜索框正左侧，靠右成组） */
+.devlog-weekly-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 100px;
+  border: 1px solid var(--border-line);
+  background: transparent;
+  font-size: 11px;
+  font-family: var(--font-ui);
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  outline: none !important;
+  transition: all var(--transition-fast);
+}
+.devlog-weekly-btn:focus { outline: none !important; }
+.devlog-weekly-btn svg { flex-shrink: 0; }
+.devlog-weekly-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+  border-color: var(--border-focus);
+}
 
 /* 时间筛选（随工具行） */
 .devlog-time-filter {
