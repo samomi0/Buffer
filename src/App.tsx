@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAppStore, type ToolManifest, type AppTheme, DEFAULT_DSH_CONFIG, DEFAULT_TERMINAL_CONFIG } from "./core/stores/appStore";
 import { AppTopBar } from "./core/components/dashboard/AppTopBar";
+import { WindowBar } from "./core/components/chrome/WindowBar";
 import { DashboardPage } from "./core/components/dashboard/DashboardPage";
 import { ToolFrame } from "./core/components/tools/ToolFrame";
 import { DataDirSetup } from "./core/components/setup/DataDirSetup";
@@ -164,20 +165,30 @@ function App() {
 
   if (phase === "loading") {
     return (
-      <div className="loading-shell">
-        <span className="loading-pulse">启动中...</span>
+      <div className="app-window">
+        <WindowBar />
+        <div className="phase-frame">
+          <div className="loading-shell">
+            <span className="loading-pulse">启动中...</span>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (phase === "setup") {
     return (
-      <DataDirSetup
-        onComplete={(dir) => {
-          setDataDir(dir);
-          setPhase("ready");
-        }}
-      />
+      <div className="app-window">
+        <WindowBar />
+        <div className="phase-frame">
+          <DataDirSetup
+            onComplete={(dir) => {
+              setDataDir(dir);
+              setPhase("ready");
+            }}
+          />
+        </div>
+      </div>
     );
   }
 

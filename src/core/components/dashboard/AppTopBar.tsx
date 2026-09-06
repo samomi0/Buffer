@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { useAppStore, type ToolManifest, type AppTheme } from "../../stores/appStore";
 import { readWorkbenchSettings, writeWorkbenchSettings } from "../../lib/workbenchSettings";
+import { useWindowChrome } from "../chrome/windowChrome";
+import { WindowControls } from "../chrome/WindowControls";
 import "./AppTopBar.css";
 
 export function AppTopBar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { onTitlebarMouseDown } = useWindowChrome();
   const tools = useAppStore((s) => s.tools);
   const activeToolId = useAppStore((s) => s.activeToolId);
   const topbarToolIds = useAppStore((s) => s.topbarToolIds);
@@ -40,7 +43,7 @@ export function AppTopBar() {
   };
 
   return (
-    <header className="app-topbar">
+    <header className="app-topbar" onMouseDown={onTitlebarMouseDown}>
       <button
         className="app-topbar-menu-btn"
         onClick={() => setMenuOpen((v) => !v)}
@@ -87,6 +90,8 @@ export function AppTopBar() {
           {theme === "dark" ? <SunIcon /> : <MoonIcon />}
         </button>
       </div>
+
+      <WindowControls />
 
       {menuOpen && (
         <>

@@ -1,0 +1,27 @@
+/* ── 极简窗口条（加载 / 首次设置阶段） ───────────────────── */
+.window-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 10px 0 14px;
+  flex-shrink: 0;
+  background: var(--bg-root);
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+.window-bar-brand {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.window-bar-grow {
+  flex: 1;
+  min-width: 0;
+  align-self: stretch;
+}

@@ -8,6 +8,9 @@
   position: relative;
   z-index: 10;
   background: var(--bg-root);
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
 }
 
 .app-topbar-menu-btn {

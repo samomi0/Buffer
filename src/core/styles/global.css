@@ -165,6 +165,20 @@ body {
   min-height: 0;
 }
 
+/* 无边框窗口外层（加载/设置阶段）：顶部窗口条 + 剩余内容 */
+.app-window {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.phase-frame {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .app-page {
   flex: 1;
   min-height: 0;

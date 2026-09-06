@@ -1,0 +1,43 @@
+/* ── 窗口控制按钮组（最小化 / 最大化 / 关闭） ─────────────── */
+.window-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 8px;
+  padding-right: 2px;
+  flex-shrink: 0;
+}
+
+.window-control-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.window-control-btn svg {
+  display: block;
+}
+
+.window-control-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+/* 关闭按钮 hover 偏红提示 */
+.window-control-btn.close:hover {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}
+
+:root[data-theme="dark"] .window-control-btn.close:hover {
+  background: rgba(232, 86, 86, 0.18);
+  color: #ff9c9c;
+}
