@@ -11,6 +11,10 @@ interface Props {
   onArchive: () => void;
   onDelete: () => void;
   onProgressChange?: (progressId: string | undefined) => void;
+  /** 看板模式：按下卡片后由看板自行判定拖拽（整卡可拖） */
+  onDragPointerDown?: (e: React.PointerEvent<HTMLDivElement>) => void;
+  /** 拖动中的视觉状态 */
+  dragging?: boolean;
 }
 
 function extractPreviewText(content: object, maxChars = 130): string {
@@ -22,7 +26,7 @@ function extractPreviewText(content: object, maxChars = 130): string {
   return walk(content as { content?: unknown[] }).trim().replace(/\s+/g, " ").slice(0, maxChars);
 }
 
-export function NoteCard({ note, tags, progressList, onClick, onArchive, onDelete, onProgressChange }: Props) {
+export function NoteCard({ note, tags, progressList, onClick, onArchive, onDelete, onProgressChange, onDragPointerDown, dragging }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
   const noteTags = tags.filter((t) => note.tags.includes(t.id));
@@ -62,7 +66,11 @@ export function NoteCard({ note, tags, progressList, onClick, onArchive, onDelet
   const showProgressBtn = !note.archived && progressList && progressList.length > 0 && !!onProgressChange;
 
   return (
-    <div className="devlog-card" onClick={onClick}>
+    <div
+      className={dragging ? "devlog-card is-dragging" : "devlog-card"}
+      onPointerDown={onDragPointerDown}
+      onClick={onClick}
+    >
       <div className="devlog-card-actions">
         {/* 进度快捷按钮 */}
         {showProgressBtn && (
@@ -104,8 +112,6 @@ export function NoteCard({ note, tags, progressList, onClick, onArchive, onDelet
           </button>
         )}
       </div>
-
-      {progress && <div className="devlog-progress-ribbon" style={{ background: progress.color }} />}
 
       <div className="devlog-card-title">{note.title}</div>
 

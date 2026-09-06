@@ -114,6 +114,9 @@ interface AppState {
   /** 开发手记进度状态列表 */
   devlogProgress: DevlogProgress[];
   setDevlogProgress: (list: DevlogProgress[]) => void;
+  /** 开发手记看板列顺序（含无状态占位 key），null = 使用默认顺序 */
+  devlogColumnOrder: string[] | null;
+  setDevlogColumnOrder: (order: string[] | null) => void;
   /** DeepSeek Harness Web 前端地址配置 */
   dshConfig: DshConfig;
   setDshConfig: (config: DshConfig) => void;
@@ -148,6 +151,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   devlogDateFilter: null,
   devlogOpenCmd: "code",
   devlogProgress: DEFAULT_DEVLOG_PROGRESS,
+  devlogColumnOrder: null,
   dshConfig: DEFAULT_DSH_CONFIG,
   terminalConfig: DEFAULT_TERMINAL_CONFIG,
   theme: loadTheme(),
@@ -192,6 +196,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setDevlogDateFilter: (date) => set({ devlogDateFilter: date }),
   setDevlogOpenCmd: (cmd) => set({ devlogOpenCmd: cmd }),
   setDevlogProgress: (list) => set({ devlogProgress: list }),
+  setDevlogColumnOrder: (order) => set({ devlogColumnOrder: order }),
   setDshConfig: (config) => set({ dshConfig: config }),
   setTerminalConfig: (config) => set({ terminalConfig: config }),
   setTheme: (theme) => set({ theme }),

@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import type { DevlogNote, DevlogTag } from "./devlog.types";
 import { TimeFilter, getDateRange, timeFilterLabel, TIME_OPTIONS } from "./devlog.types";
 import { NoteCard } from "./NoteCard";
+import { NoteBoard } from "./NoteBoard";
 import { WeeklyReport } from "./WeeklyReport";
 import type { DevlogProgress } from "../../core/stores/appStore";
 
@@ -11,6 +12,9 @@ interface Props {
   reportNotes: DevlogNote[];
   tags: DevlogTag[];
   progressList: DevlogProgress[];
+  /** 持久化的看板列顺序（含无状态占位），null = 默认 */
+  columnOrder: string[] | null;
+  onColumnOrderChange: (order: string[]) => void;
   showArchived: boolean;
   timeFilter: TimeFilter;
   onTimeFilterChange: (filter: TimeFilter) => void;
@@ -36,7 +40,7 @@ function extractText(content: object): string {
 
 /* ── Component ───────────────────────────────────────────────── */
 export function NoteGrid({
-  notes, reportNotes, tags, progressList, showArchived,
+  notes, reportNotes, tags, progressList, columnOrder, onColumnOrderChange, showArchived,
   timeFilter, onTimeFilterChange, customFrom, onCustomFromChange, customTo, onCustomToChange,
   onOpenNote, onArchiveNote, onDeleteNote, onProgressChange, onNewNote,
 }: Props) {
@@ -84,6 +88,9 @@ export function NoteGrid({
       onTimeFilterChange({ type } as TimeFilter);
     }
   }
+
+  /* 非查看归档 → 看板；查看归档 → 沿用网格 */
+  const boardMode = !showArchived;
 
   return (
     <div className="devlog-grid-panel">
@@ -144,25 +151,40 @@ export function NoteGrid({
         </div>
       )}
 
-      {/* Cards grid */}
-      <div className="devlog-cards-area">
-        {filteredNotes.map((note) => (
-          <NoteCard
-            key={note.id}
-            note={note}
-            tags={tags}
-            progressList={progressList}
-            onClick={() => onOpenNote(note)}
-            onArchive={() => onArchiveNote(note.id)}
-            onDelete={() => onDeleteNote(note.id)}
-            onProgressChange={(pid) => onProgressChange(note.id, pid)}
-          />
-        ))}
-        {/* New note placeholder */}
-        <div className="devlog-card devlog-card--new" onClick={onNewNote}>
-          <span className="devlog-card-new-label">＋ 新建笔记</span>
+      {/* Cards area：非归档 → 看板；查看归档 → 网格 */}
+      {boardMode ? (
+        <NoteBoard
+          notes={filteredNotes}
+          tags={tags}
+          progressList={progressList}
+          columnOrder={columnOrder}
+          onOrderChange={onColumnOrderChange}
+          onOpenNote={onOpenNote}
+          onArchiveNote={onArchiveNote}
+          onDeleteNote={onDeleteNote}
+          onProgressChange={onProgressChange}
+          onNewNote={onNewNote}
+        />
+      ) : (
+        <div className="devlog-cards-area">
+          {filteredNotes.map((note) => (
+            <NoteCard
+              key={note.id}
+              note={note}
+              tags={tags}
+              progressList={progressList}
+              onClick={() => onOpenNote(note)}
+              onArchive={() => onArchiveNote(note.id)}
+              onDelete={() => onDeleteNote(note.id)}
+              onProgressChange={(pid) => onProgressChange(note.id, pid)}
+            />
+          ))}
+          {/* New note placeholder */}
+          <div className="devlog-card devlog-card--new" onClick={onNewNote}>
+            <span className="devlog-card-new-label">＋ 新建笔记</span>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

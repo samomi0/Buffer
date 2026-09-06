@@ -602,17 +602,6 @@
   padding-top: 2px;
 }
 
-/* ── 进度色带 ────────────────────────────────────────────────────── */
-.devlog-progress-ribbon {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-  z-index: 1;
-}
-
 /* ── 卡片操作区进度按钮 ──────────────────────────────────────────── */
 .devlog-card-progress-btn .devlog-card-progress-indicator {
   width: 9px;
@@ -663,3 +652,172 @@
   flex-shrink: 0;
   display: inline-block;
 }
+
+/* ─────────────────────────────────────────────────────────────────
+   看板模式（非查看归档状态）
+   X+1 列 = X 个进度状态列 + 1 个无状态列（默认最左）
+───────────────────────────────────────────────────────────────── */
+.devlog-board {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  padding: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.devlog-board-column {
+  --col-head-h: 40px;
+  position: relative;
+  isolation: isolate;
+  flex: 0 0 268px;
+  min-width: 240px;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+/* 列顺序拖拽的插入指示条 */
+.devlog-board-column::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--accent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+  z-index: 2;
+}
+.devlog-board-column.is-before::after { left: -2px; opacity: 1; }
+.devlog-board-column.is-after::after  { right: -2px; opacity: 1; }
+
+/* 卡片拖入该列时的提示 */
+.devlog-board-column.is-drop {
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg-elevated));
+  border-color: var(--accent);
+}
+.devlog-board-column.is-drop .devlog-board-col-body {
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg-elevated));
+}
+
+/* 无状态列略微弱化，与状态列区分（同样可拖动） */
+.devlog-board-column--none {
+  background: color-mix(in srgb, var(--bg-elevated) 82%, transparent);
+}
+
+/* 拖拽进行中：禁止文本选中，保持抓取手感 */
+.devlog-dragging,
+.devlog-dragging * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+.devlog-dragging {
+  cursor: grabbing !important;
+}
+
+/* 被拖起的列 / 卡片半透明 */
+.devlog-board-column.is-dragging { opacity: 0.45; }
+.devlog-card.is-dragging { opacity: 0.45; }
+
+/* 列头淡色层：整列顶部淡色打底。其底边不是一条横直线，
+   而是随下方卡片区圆角矩形的顶部（两端圆弧），与卡片 R 一致。
+   做法：淡色层向下多延伸一个 R，由上方不透明且带圆角的卡片区
+   在中间盖住淡色层，只在两侧圆角处留出淡色的圆弧端。 */
+.devlog-board-col-tint {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--col-head-h) + var(--radius-md));
+  background: color-mix(in srgb, var(--devlog-col) 18%, transparent);
+  border-radius: calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 列头文字行（置于淡色层之上） */
+.devlog-board-col-header {
+  position: relative;
+  z-index: 1;
+  height: var(--col-head-h);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  user-select: none;
+  cursor: grab;
+}
+.devlog-board-col-header:active { cursor: grabbing; }
+
+.devlog-board-col-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--devlog-col);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.devlog-board-col-count {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-root);
+  border-radius: 100px;
+  padding: 1px 6px;
+  line-height: 1.6;
+}
+
+.devlog-board-col-grip {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  opacity: 0.5;
+  transition: opacity var(--transition-fast);
+}
+.devlog-board-col-header:hover .devlog-board-col-grip { opacity: 1; }
+
+/* 卡片区：独立圆角矩形（上端圆角 = 标题淡色层的圆弧底边，与卡片 R 一致） */
+.devlog-board-col-body {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
+/* 无状态列整体更柔和：卡片区底色随列 */
+.devlog-board-column--none .devlog-board-col-body {
+  background: color-mix(in srgb, var(--bg-elevated) 82%, transparent);
+}
+
+.devlog-board-col-empty {
+  margin: 6px 2px;
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+}
+
+/* 看板里的新建占位卡略矮 */
+.devlog-board .devlog-card--new { min-height: 60px; }

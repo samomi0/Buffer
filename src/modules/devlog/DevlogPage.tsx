@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAppStore } from "../../core/stores/appStore";
 import type { DevlogNote, DevlogTag, TimeFilter } from "./devlog.types";
 import { loadAllNotes, loadTags, saveNote, deleteNote, saveTags, deleteNoteImages } from "./useDevlog";
+import { readWorkbenchSettings, writeWorkbenchSettings } from "../../core/lib/workbenchSettings";
 import { DevlogSidebar } from "./DevlogSidebar";
 import { NoteGrid } from "./NoteGrid";
 import { NoteEditModal } from "./NoteEditModal";
@@ -25,6 +26,8 @@ export function DevlogPage() {
   const devlogDateFilter = useAppStore((s) => s.devlogDateFilter);
   const setDevlogDateFilter = useAppStore((s) => s.setDevlogDateFilter);
   const devlogProgress = useAppStore((s) => s.devlogProgress);
+  const devlogColumnOrder = useAppStore((s) => s.devlogColumnOrder);
+  const setDevlogColumnOrder = useAppStore((s) => s.setDevlogColumnOrder);
 
   /* ── Ctrl+K 返回 ─────────────────────────────────────────── */
   useEffect(() => {
@@ -144,6 +147,17 @@ export function DevlogPage() {
     await saveTags(dataDir, next);
   }
 
+  /* ── 看板列顺序（含无状态列）持久化到数据 ────────────────── */
+  async function handleColumnOrderChange(order: string[]) {
+    setDevlogColumnOrder(order);
+    try {
+      const settings = await readWorkbenchSettings(dataDir);
+      await writeWorkbenchSettings(dataDir, { ...settings, devlogColumnOrder: order });
+    } catch {
+      /* ignore */
+    }
+  }
+
   async function handleEditTag(tag: DevlogTag) {
     const next = tags.map((t) => (t.id === tag.id ? tag : t));
     setTags(next);
@@ -228,6 +242,8 @@ export function DevlogPage() {
           reportNotes={notes}
           tags={tags}
           progressList={devlogProgress}
+          columnOrder={devlogColumnOrder}
+          onColumnOrderChange={handleColumnOrderChange}
           showArchived={showArchived}
           timeFilter={timeFilter}
           onTimeFilterChange={setTimeFilter}

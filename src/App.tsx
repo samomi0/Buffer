@@ -68,6 +68,7 @@ function App() {
   const setTopbarToolIds = useAppStore((s) => s.setTopbarToolIds);
   const setDevlogOpenCmd = useAppStore((s) => s.setDevlogOpenCmd);
   const setDevlogProgress = useAppStore((s) => s.setDevlogProgress);
+  const setDevlogColumnOrder = useAppStore((s) => s.setDevlogColumnOrder);
   const setDshConfig = useAppStore((s) => s.setDshConfig);
   const setTerminalConfig = useAppStore((s) => s.setTerminalConfig);
   const theme = useAppStore((s) => s.theme);
@@ -131,6 +132,9 @@ function App() {
           }
           if (settings.devlogProgress && settings.devlogProgress.length > 0) {
             setDevlogProgress(settings.devlogProgress);
+          }
+          if (Array.isArray(settings.devlogColumnOrder)) {
+            setDevlogColumnOrder(settings.devlogColumnOrder);
           }
           if (settings.dsh) {
             setDshConfig({ ...DEFAULT_DSH_CONFIG, ...settings.dsh });
