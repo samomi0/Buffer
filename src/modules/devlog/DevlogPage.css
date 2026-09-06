@@ -710,10 +710,12 @@
   background: color-mix(in srgb, var(--accent) 7%, var(--bg-elevated));
 }
 
-/* 无状态列略微弱化，与状态列区分（同样可拖动） */
+/* 无状态列：与状态列同底色（var(--bg-elevated)），只是不铺列头淡色块。
+   标题区不再带颜色，其背景与整列背景色一致。 */
 .devlog-board-column--none {
-  background: color-mix(in srgb, var(--bg-elevated) 82%, transparent);
+  background: var(--bg-elevated);
 }
+.devlog-board-column--none .devlog-board-col-tint { display: none; }
 
 /* 拖拽进行中：禁止文本选中，保持抓取手感 */
 .devlog-dragging,
@@ -739,7 +741,7 @@
   left: 0;
   right: 0;
   height: calc(var(--col-head-h) + var(--radius-md));
-  background: color-mix(in srgb, var(--devlog-col) 28%, transparent);
+  background: color-mix(in srgb, var(--devlog-col) 45%, transparent);
   border-radius: calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0 0;
   z-index: 0;
   pointer-events: none;
@@ -789,7 +791,8 @@
 }
 .devlog-board-col-header:hover .devlog-board-col-grip { opacity: 1; }
 
-/* 卡片区：独立圆角矩形（上端圆角 = 标题淡色层的圆弧底边，与卡片 R 一致） */
+/* 卡片区：卡片滚动容器。底色保留，用于遮住列头淡色层向下的延伸；
+   底部圆角与列本体一致，避免这块矩形底色把列底部的圆角边框线盖成直角。 */
 .devlog-board-col-body {
   position: relative;
   z-index: 1;
@@ -797,16 +800,11 @@
   min-height: 0;
   overflow-y: auto;
   background: var(--bg-elevated);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 8px;
-}
-
-/* 无状态列整体更柔和：卡片区底色随列 */
-.devlog-board-column--none .devlog-board-col-body {
-  background: color-mix(in srgb, var(--bg-elevated) 100%, transparent);
 }
 
 .devlog-board-col-empty {
