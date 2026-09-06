@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
+import type { CSSProperties, PointerEvent as ReactPointerEvent, Ref } from "react";
+import { createPortal } from "react-dom";
 import type { DevlogNote, DevlogTag } from "./devlog.types";
 import type { DevlogProgress } from "../../core/stores/appStore";
-import { NoteCard } from "./NoteCard";
+import { NoteCard, extractPreviewText } from "./NoteCard";
 
 /* 无状态列的标识 key（不可能与真实进度 id 冲突）。作为普通列之一参与排序，默认在首位。 */
 export const NO_STATUS_KEY = "__no_status__";
@@ -59,6 +60,44 @@ interface DragSession {
   curX: number;
   curY: number;
   moved: boolean;
+  /** 卡片拖拽时的抓取信息：相对卡片的落点与卡片尺寸（供浮影跟手） */
+  grab?: { offsetX: number; offsetY: number; w: number; h: number };
+}
+
+/* ── 拖拽浮影：跟随指针的卡片克隆（跟手动效） ─────────────── */
+function DragGhostCard({ note, tags, width, height, initialTransform, innerRef }: {
+  note: DevlogNote;
+  tags: DevlogTag[];
+  width: number;
+  height: number;
+  initialTransform: string;
+  innerRef: Ref<HTMLDivElement>;
+}) {
+  const noteTags = tags.filter((t) => note.tags.includes(t.id));
+  const preview = extractPreviewText(note.content);
+  return (
+    <div
+      ref={innerRef}
+      className="devlog-card devlog-drag-ghost"
+      style={{ width, height, transform: initialTransform }}
+    >
+      <div className="devlog-card-title">{note.title}</div>
+      {preview && <div className="devlog-card-preview">{preview}</div>}
+      {noteTags.length > 0 && (
+        <div className="devlog-card-tags">
+          {noteTags.map((t) => (
+            <span
+              key={t.id}
+              className="devlog-tag-capsule"
+              style={{ background: `${t.color}1a`, color: t.color, border: `1px solid ${t.color}50` }}
+            >
+              {t.name}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 /* ── Component ───────────────────────────────────────────────── */
@@ -111,6 +150,16 @@ export function NoteBoard({
   const [cardDropKey, setCardDropKey] = useState<string | null>(null);
   const [dragColKey, setDragColKey] = useState<string | null>(null);
   const [dragCardId, setDragCardId] = useState<string | null>(null);
+  const [dragGhost, setDragGhost] = useState<{
+    note: DevlogNote;
+    w: number;
+    h: number;
+    offsetX: number;
+    offsetY: number;
+    x: number;
+    y: number;
+  } | null>(null);
+  const ghostRef = useRef<HTMLDivElement | null>(null);
 
   /* 根据会话当前坐标刷新高亮（拖动 + 自动滚动时共用） */
   const refreshTargetRef = useRef<() => void>(() => {});
@@ -196,11 +245,26 @@ export function NoteBoard({
     if (!s.moved) {
       s.moved = true;
       document.body.classList.add("devlog-dragging");
-      if (s.kind === "card") setDragCardId(s.key);
-      else setDragColKey(s.key);
+      if (s.kind === "card") {
+        setDragCardId(s.key);
+        const note = notes.find((n) => n.id === s.key);
+        const g = s.grab;
+        if (note && g) {
+          setDragGhost({ note, w: g.w, h: g.h, offsetX: g.offsetX, offsetY: g.offsetY, x: e.clientX, y: e.clientY });
+        }
+      } else {
+        setDragColKey(s.key);
+      }
     }
     s.curX = e.clientX;
     s.curY = e.clientY;
+    if (s.kind === "card" && s.grab && ghostRef.current) {
+      const g = s.grab;
+      const x = e.clientX - g.offsetX;
+      const y = e.clientY - g.offsetY;
+      const rot = Math.max(-6, Math.min(6, (e.clientX - s.startX) * 0.18));
+      ghostRef.current.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${rot}deg) scale(1.02)`;
+    }
     e.preventDefault();
     const b = boardRef.current;
     if (b) {
@@ -220,6 +284,7 @@ export function NoteBoard({
     setDragCardId(null);
     setReorderTarget(null);
     setCardDropKey(null);
+    setDragGhost(null);
   }
 
   const handleUp = (e: PointerEvent) => {
@@ -287,9 +352,16 @@ export function NoteBoard({
     const el = e.target as HTMLElement;
     if (el.closest("button, input, select, textarea, a")) return;
     suppressClickRef.current = false;
+    const rect = e.currentTarget.getBoundingClientRect();
     dragRef.current = {
       kind: "card", key: noteId, pointerId: e.pointerId,
       startX: e.clientX, startY: e.clientY, curX: e.clientX, curY: e.clientY, moved: false,
+      grab: {
+        offsetX: e.clientX - rect.left,
+        offsetY: e.clientY - rect.top,
+        w: rect.width,
+        h: rect.height,
+      },
     };
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* ignore */ }
   }
@@ -367,6 +439,17 @@ export function NoteBoard({
           </div>
         );
       })}
+      {dragGhost && createPortal(
+        <DragGhostCard
+          note={dragGhost.note}
+          tags={tags}
+          width={dragGhost.w}
+          height={dragGhost.h}
+          initialTransform={`translate3d(${dragGhost.x - dragGhost.offsetX}px, ${dragGhost.y - dragGhost.offsetY}px, 0) rotate(0deg) scale(1.02)`}
+          innerRef={ghostRef}
+        />,
+        document.body
+      )}
     </div>
   );
 }

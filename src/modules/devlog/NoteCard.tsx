@@ -17,7 +17,7 @@ interface Props {
   dragging?: boolean;
 }
 
-function extractPreviewText(content: object, maxChars = 130): string {
+export function extractPreviewText(content: object, maxChars = 130): string {
   function walk(node: { content?: unknown[]; text?: string }): string {
     if (node.text) return node.text;
     if (!node.content) return "";

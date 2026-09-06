@@ -508,16 +508,18 @@
   border-radius: var(--radius-md);
   padding: 12px 12px 10px;
   cursor: pointer;
-  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-height: 90px;
   overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
 }
 .devlog-card:hover {
   border-color: var(--border-focus);
-  box-shadow: 0 2px 12px rgba(37,99,235,0.06);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.09), 0 2px 8px rgba(37,99,235,0.05);
 }
 
 .devlog-card--new {
@@ -727,9 +729,29 @@
   cursor: grabbing !important;
 }
 
-/* 被拖起的列 / 卡片半透明 */
+/* 被拖起的列 / 卡片半透明；原卡片轻微收缩留出“被提起”的视觉 */
 .devlog-board-column.is-dragging { opacity: 0.45; }
-.devlog-card.is-dragging { opacity: 0.45; }
+.devlog-card.is-dragging {
+  opacity: 0.35;
+  transform: scale(0.98);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+/* 拖拽跟手浮影：跟随指针的卡片克隆 */
+.devlog-drag-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 10000;
+  pointer-events: none;
+  margin: 0;
+  transform-origin: center center;
+  will-change: transform;
+  transition: none !important;
+  box-shadow: 0 18px 44px rgba(0,0,0,0.20), 0 6px 16px rgba(0,0,0,0.12);
+  border-color: var(--border-focus);
+  cursor: grabbing;
+}
 
 /* 列头淡色层：整列顶部淡色打底。其底边不是一条横直线，
    而是随下方卡片区圆角矩形的顶部（两端圆弧），与卡片 R 一致。
