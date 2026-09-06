@@ -763,7 +763,14 @@
   left: 0;
   right: 0;
   height: calc(var(--col-head-h) + var(--radius-md));
-  background: color-mix(in srgb, var(--devlog-col) 45%, transparent);
+  background: color-mix(in srgb, var(--devlog-col) 20%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  /* 加一层极细边框增强质感 */
+  border: 1px solid color-mix(in srgb, var(--devlog-col) 30%, transparent);
+  box-shadow: 
+    0 8px 32px color-mix(in srgb, var(--devlog-col) 15%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 20%, transparent);
   border-radius: calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0 0;
   z-index: 0;
   pointer-events: none;
