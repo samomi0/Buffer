@@ -739,7 +739,7 @@
   left: 0;
   right: 0;
   height: calc(var(--col-head-h) + var(--radius-md));
-  background: color-mix(in srgb, var(--devlog-col) 18%, transparent);
+  background: color-mix(in srgb, var(--devlog-col) 28%, transparent);
   border-radius: calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0 0;
   z-index: 0;
   pointer-events: none;
@@ -806,7 +806,7 @@
 
 /* 无状态列整体更柔和：卡片区底色随列 */
 .devlog-board-column--none .devlog-board-col-body {
-  background: color-mix(in srgb, var(--bg-elevated) 82%, transparent);
+  background: color-mix(in srgb, var(--bg-elevated) 100%, transparent);
 }
 
 .devlog-board-col-empty {
