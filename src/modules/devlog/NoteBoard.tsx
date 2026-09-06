@@ -426,9 +426,9 @@ export function NoteBoard({
                   onProgressChange={(pid) => onProgressChange(note.id, pid)}
                 />
               ))}
-              {noteList.length === 0 && col.key !== NO_STATUS_KEY && (
+              {/* {noteList.length === 0 && col.key !== NO_STATUS_KEY && (
                 <div className="devlog-board-col-empty">暂无笔记</div>
-              )}
+              )} */}
               {/* 无状态列底部：新建笔记占位 */}
               {col.key === NO_STATUS_KEY && (
                 <div className="devlog-card devlog-card--new devlog-board-new" onClick={onNewNote}>
