@@ -104,14 +104,14 @@
 }
 
 .devlog-archive-btn {
-  background: var(--bg-elevated);
-  border-color: var(--border);
-  color: var(--text-secondary);
+  background: rgba(37, 99, 235, 0.07);
+  border-color: rgba(37, 99, 235, 0.2);
+  color: #315dbb;
 }
 .devlog-archive-btn:hover {
-  color: var(--text);
-  border-color: var(--border-focus);
-  background: var(--bg-hover);
+  color: #2454b2;
+  border-color: rgba(37, 99, 235, 0.38);
+  background: rgba(37, 99, 235, 0.12);
 }
 .devlog-archive-btn.active {
   background: var(--accent-dim);
@@ -123,13 +123,27 @@
 }
 
 .devlog-reset-btn {
-  background: var(--bg-elevated);
-  color: var(--text-secondary);
+  background: rgba(180, 112, 32, 0.07);
+  border-color: rgba(180, 112, 32, 0.2);
+  color: #9a651e;
 }
 .devlog-reset-btn:hover {
-  color: var(--accent);
-  background: var(--bg-hover);
-  border-color: var(--border-focus);
+  color: #855412;
+  background: rgba(180, 112, 32, 0.12);
+  border-color: rgba(180, 112, 32, 0.38);
+}
+
+[data-theme="dark"] .devlog-archive-btn {
+  color: #8eacef;
+}
+[data-theme="dark"] .devlog-archive-btn:hover {
+  color: #b2c7ff;
+}
+[data-theme="dark"] .devlog-reset-btn {
+  color: #e1b875;
+}
+[data-theme="dark"] .devlog-reset-btn:hover {
+  color: #f1ce91;
 }
 
 /* 每个标签的关联目录快速打开按钮（始终占位，无目录时禁用） */
@@ -307,9 +321,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 14px;
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border);
+  padding: 10px 14px 8px;
+  background: transparent;
+  border-bottom: none;
   flex-shrink: 0;
   min-width: max-content;
   overflow-x: auto;
@@ -320,8 +334,6 @@
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-  padding-right: 4px;
-  border-right: 1px solid var(--border-line);
 }
 
 /* 搜索框缩短（不占满整行），与周报按钮、新建一起靠右排列 */
