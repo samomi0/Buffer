@@ -483,15 +483,16 @@
   gap: 0;
   padding: 2px;
   border: 1px solid var(--border-line);
-  border-radius: 7px;
+  border-radius: 9px;
   background: var(--bg-elevated);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
   flex-shrink: 0;
 }
 
 .devlog-time-btn {
   height: 24px;
   padding: 0 9px;
-  border-radius: 5px;
+  border-radius: 7px;
   border: 1px solid transparent;
   background: transparent;
   font-size: 11px;
@@ -499,20 +500,28 @@
   color: var(--text-secondary);
   cursor: pointer;
   white-space: nowrap;
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
   outline: none !important;
 }
 .devlog-time-btn:focus { outline: none !important; }
-.devlog-time-btn:hover { background: var(--bg-hover); color: var(--text); }
-.devlog-time-btn.active { background: var(--accent-dim); color: var(--accent); border-color: var(--border-focus); }
+.devlog-time-btn:hover { background: var(--bg-hover); color: var(--text); transform: translateY(-1px); }
+.devlog-time-btn.active {
+  background: rgba(37, 99, 235, 0.14);
+  color: var(--accent);
+  border-color: rgba(37, 99, 235, 0.34);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.12);
+}
 
 .devlog-custom-range {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 14px 6px;
+  margin: 6px 14px 0;
+  padding: 8px 10px;
   background: var(--bg-surface);
-  border-bottom: 1px solid var(--border);
+  border: 1px solid var(--border-line);
+  border-radius: 9px;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
   flex-shrink: 0;
 }
 
@@ -528,12 +537,29 @@
   font-family: var(--font-ui);
   outline: none !important;
   cursor: pointer;
-  transition: border var(--transition-fast), box-shadow var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
+}
+.devlog-date-input:hover {
+  border-color: var(--border-focus);
+  background: var(--bg-elevated);
+  transform: translateY(-1px);
 }
 .devlog-date-input:focus {
   outline: none !important;
   border-color: transparent;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+}
+
+[data-theme="dark"] .devlog-time-filter {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+[data-theme="dark"] .devlog-time-btn.active {
+  background: rgba(91, 134, 232, 0.24);
+  border-color: rgba(91, 134, 232, 0.5);
+  box-shadow: 0 2px 7px rgba(91, 134, 232, 0.16);
+}
+[data-theme="dark"] .devlog-custom-range {
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.22);
 }
 
 /* 卡片区域 */
