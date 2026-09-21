@@ -38,7 +38,7 @@ export function AppTopBar() {
 
   const handleMenuItem = (id: string) => {
     setMenuOpen(false);
-    if (id === "dashboard") popTool();
+    if (id === "calendar" || id === "dashboard") popTool();
     else pushTool(id);
   };
 
@@ -58,9 +58,9 @@ export function AppTopBar() {
         <button
           className={`app-topbar-chip ${!activeToolId ? "active" : ""}`}
           onClick={popTool}
-          title="仪表板"
+          title="日历"
         >
-          <HomeIcon />
+          <CalendarIcon />
         </button>
         {visibleTools.map((tool) => (
           <button
@@ -106,9 +106,9 @@ export function AppTopBar() {
             <div className="app-topbar-drawer-items">
               <button
                 className={`app-topbar-drawer-item ${!activeToolId ? "active" : ""}`}
-                onClick={() => handleMenuItem("dashboard")}
+                onClick={() => handleMenuItem("calendar")}
               >
-                <HomeIcon /> 仪表板
+                <CalendarIcon /> 日历
               </button>
               {tools.map((tool) => (
                 <button
@@ -152,11 +152,13 @@ function CloseIcon() {
   );
 }
 
-function HomeIcon() {
+function CalendarIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-      <polyline points="9 22 9 12 15 12 15 22" />
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
     </svg>
   );
 }

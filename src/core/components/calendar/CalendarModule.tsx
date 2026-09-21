@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useAppStore } from "../../stores/appStore";
 import { syncHolidaysForYear } from "../../lib/holidaySync";
-import { RichTextEditor } from "../../components/RichTextEditor";
+import { RichTextEditor } from "../RichTextEditor";
 import { plainTextToTipTapJSON, tipTapToPlainText, isTipTapDoc } from "../../lib/richTextMigration";
 import "./CalendarModule.css";
 

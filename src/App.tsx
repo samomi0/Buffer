@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAppStore, type ToolManifest, type AppTheme, DEFAULT_DSH_CONFIG, DEFAULT_TERMINAL_CONFIG } from "./core/stores/appStore";
 import { AppTopBar } from "./core/components/dashboard/AppTopBar";
 import { WindowBar } from "./core/components/chrome/WindowBar";
-import { DashboardPage } from "./core/components/dashboard/DashboardPage";
+import { CalendarPage } from "./core/components/calendar/CalendarPage";
 import { ToolFrame } from "./core/components/tools/ToolFrame";
 import { DataDirSetup } from "./core/components/setup/DataDirSetup";
 import { SettingsPage } from "./core/components/settings/SettingsPage";
@@ -204,7 +204,7 @@ function App() {
    */
   function renderModule(toolId: string): React.ReactNode {
     const tool = tools.find((t) => t.id === toolId);
-    if (!tool) return <DashboardPage />;
+    if (!tool) return <CalendarPage />;
 
     if (tool.kind === "builtin") {
       switch (tool.id) {
@@ -212,7 +212,7 @@ function App() {
         case "DevLog":      return <DevlogPage />;
         case "DshWeb":      return <DshWebPage />;
         case "Terminal":    return <TerminalPage />;
-        default:            return <DashboardPage />;
+        default:            return <CalendarPage />;
       }
     }
 
@@ -233,7 +233,7 @@ function App() {
   } else if (activeToolId) {
     page = renderModule(activeToolId);
   } else {
-    page = <DashboardPage />;
+    page = <CalendarPage />;
   }
 
   return (

@@ -1,4 +1,4 @@
-.dashboard-shell {
+.calendar-page-shell {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -7,14 +7,14 @@
   animation: fadeIn 0.25s ease;
 }
 
-.dashboard-calendar-page {
+.calendar-page-content {
   flex: 1;
   min-height: 0;
   padding: 16px 28px 28px;
 }
 
 @media (max-width: 960px) {
-  .dashboard-calendar-page {
+  .calendar-page-content {
     padding: 12px 12px 18px;
   }
 }
