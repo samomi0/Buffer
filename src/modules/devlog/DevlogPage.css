@@ -606,6 +606,16 @@
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0,0,0,0.09), 0 2px 8px rgba(37,99,235,0.05);
 }
+.devlog-card.is-pinned::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent);
+}
 
 .devlog-card--new {
   border: 1.5px dashed var(--border);
@@ -635,7 +645,6 @@
   transition: opacity var(--transition-fast);
 }
 .devlog-card:hover .devlog-card-actions { opacity: 1; }
-.devlog-card.is-pinned .devlog-card-actions { opacity: 1; }
 
 .devlog-card-btn {
   width: 24px;

@@ -45,13 +45,12 @@ export function NoteCard({ note, tags, onClick, onArchive, onDelete, onTogglePin
         {onTogglePinned && !note.archived && (
           <button
             className={`devlog-card-btn devlog-card-pin-btn${note.pinned ? " active" : ""}`}
-            title={note.pinned ? "取消置顶" : "置顶到泳道顶部"}
+            title={note.pinned ? "取消置顶" : "置顶"}
             aria-pressed={note.pinned}
             onClick={(e) => { e.stopPropagation(); onTogglePinned(); }}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill={note.pinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 21V4" />
-              <path d="M5 4c5-3 9 3 14 0v10c-5 3-9-3-14 0" />
+              <path d="M6 3v18l6-4 6 4V3z" />
             </svg>
           </button>
         )}
