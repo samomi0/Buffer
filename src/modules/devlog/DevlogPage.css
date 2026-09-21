@@ -91,51 +91,45 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 28px;
+  height: 30px;
   padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: 9px;
+  border: 1px solid var(--border-line);
+  border-radius: 7px;
   font-size: 12px;
   font-family: var(--font-ui);
   white-space: nowrap;
   cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast), box-shadow var(--transition-fast);
   flex-shrink: 0;
 }
 
-/* 归档：不生效（未查看归档）时暗淡；生效时明亮 */
 .devlog-archive-btn {
   background: var(--bg-elevated);
   border-color: var(--border);
   color: var(--text-secondary);
-  opacity: 0.72;
 }
 .devlog-archive-btn:hover {
-  opacity: 1;
   color: var(--text);
+  border-color: var(--border-focus);
+  background: var(--bg-hover);
 }
 .devlog-archive-btn.active {
   background: var(--accent-dim);
-  border-color: var(--accent);
+  border-color: var(--border-focus);
   color: var(--accent);
-  opacity: 1;
 }
 .devlog-archive-btn.active .devlog-archive-icon {
   color: var(--accent);
 }
 
-/* 重置：与归档同风格 */
 .devlog-reset-btn {
   background: var(--bg-elevated);
-  border-color: var(--border);
   color: var(--text-secondary);
-  opacity: 0.72;
 }
 .devlog-reset-btn:hover {
-  opacity: 1;
   color: var(--accent);
-  background: var(--accent-dim);
-  border-color: var(--accent);
+  background: var(--bg-hover);
+  border-color: var(--border-focus);
 }
 
 /* 每个标签的关联目录快速打开按钮（始终占位，无目录时禁用） */
@@ -324,6 +318,8 @@
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
+  padding-right: 4px;
+  border-right: 1px solid var(--border-line);
 }
 
 /* 搜索框缩短（不占满整行），与周报按钮、新建一起靠右排列 */
@@ -349,10 +345,11 @@
 
 .devlog-search-input {
   width: 100%;
+  height: 30px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 5px 22px 5px 34px;
+  border-radius: 7px;
+  padding: 0 22px 0 34px;
   font-size: 12px;
   color: var(--text);
   outline: none;
@@ -383,9 +380,12 @@
 .devlog-search-clear:hover { background: var(--bg-hover); color: var(--text); }
 
 .devlog-new-btn {
-  padding: 6px 14px;
-  border-radius: var(--radius-sm);
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 7px;
+  border: 1px solid var(--accent);
   background: var(--accent);
   color: #fff;
   font-size: 12px;
@@ -406,10 +406,11 @@
   align-items: center;
   gap: 5px;
   margin-left: auto;
-  padding: 4px 12px;
-  border-radius: 100px;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 7px;
   border: 1px solid var(--border-line);
-  background: transparent;
+  background: var(--bg-elevated);
   font-size: 11px;
   font-family: var(--font-ui);
   color: var(--text-secondary);
@@ -431,15 +432,18 @@
 .devlog-time-filter {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 0;
+  padding: 2px;
+  border: 1px solid var(--border-line);
+  border-radius: 7px;
+  background: var(--bg-elevated);
   flex-shrink: 0;
-  flex-wrap: wrap;
-  row-gap: 4px;
 }
 
 .devlog-time-btn {
-  padding: 3px 10px;
-  border-radius: 100px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 5px;
   border: 1px solid transparent;
   background: transparent;
   font-size: 11px;
