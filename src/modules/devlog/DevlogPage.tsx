@@ -228,7 +228,9 @@ export function DevlogPage() {
           tags={tags}
           tagFilters={tagFilters}
           showArchived={showArchived}
+          archivedCount={notes.filter((n) => n.archived).length}
           timeFilter={timeFilter}
+          onToggleArchived={() => setShowArchived((v) => !v)}
           onTagFilterChange={handleTagFilterChange}
           onAddTag={handleAddTag}
           onEditTag={handleEditTag}
@@ -238,7 +240,6 @@ export function DevlogPage() {
         <NoteGrid
           notes={tagFilteredNotes}
           reportNotes={notes}
-          archivedCount={notes.filter((n) => n.archived).length}
           tags={tags}
           progressList={devlogProgress}
           columnOrder={devlogColumnOrder}
@@ -250,7 +251,6 @@ export function DevlogPage() {
           onCustomFromChange={setCustomFrom}
           customTo={customTo}
           onCustomToChange={setCustomTo}
-          onToggleArchived={() => setShowArchived((v) => !v)}
           onResetFilters={handleResetFilters}
           onOpenNote={(n) => setEditingNoteId(n.id)}
           onArchiveNote={handleArchiveNote}

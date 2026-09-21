@@ -82,6 +82,16 @@
   box-shadow: 0 3px 14px rgba(0, 0, 0, 0.18);
 }
 
+.devlog-sidebar-archive-row {
+  padding: 10px 10px 8px;
+  flex-shrink: 0;
+}
+
+.devlog-sidebar .devlog-archive-btn {
+  width: 100%;
+  justify-content: center;
+}
+
 .devlog-sidebar-section {
   padding: 10px 10px 6px;
   border-bottom: 1px solid var(--border);

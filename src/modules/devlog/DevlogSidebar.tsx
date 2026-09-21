@@ -10,7 +10,9 @@ interface Props {
   tags: DevlogTag[];
   tagFilters: Record<string, "include" | "exclude">;
   showArchived: boolean;
+  archivedCount: number;
   timeFilter: TimeFilter;
+  onToggleArchived: () => void;
   /** 点击标签按钮：循环 none→include→exclude→none */
   onTagFilterChange: (tagId: string) => void;
   onAddTag: (tag: DevlogTag) => void;
@@ -24,7 +26,9 @@ export function DevlogSidebar({
   tags,
   tagFilters,
   showArchived,
+  archivedCount,
   timeFilter,
+  onToggleArchived,
   onTagFilterChange,
   onAddTag,
   onEditTag,
@@ -56,6 +60,22 @@ export function DevlogSidebar({
 
   return (
     <aside className="devlog-sidebar">
+      <div className="devlog-sidebar-archive-row">
+        <button
+          className={`devlog-archive-btn ${showArchived ? "active" : ""}`}
+          onClick={onToggleArchived}
+          title={showArchived ? "退出归档" : "查看归档"}
+          aria-pressed={showArchived}
+        >
+          <svg className="devlog-archive-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="21 8 21 21 3 21 3 8" />
+            <rect x="1" y="3" width="22" height="5" rx="1.5" />
+            <line x1="10" y1="12" x2="14" y2="12" />
+          </svg>
+          <span>归档</span>
+          <span className="devlog-sidebar-count">{archivedCount}</span>
+        </button>
+      </div>
       {/* ── 标签列表 ──────────────────────────────────────────── */}
       <div className="devlog-sidebar-section devlog-sidebar-section--scroll">
         {[...tags].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)).map((tag) => {
