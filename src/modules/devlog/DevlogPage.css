@@ -58,16 +58,15 @@
   display: flex;
   flex: 1;
   overflow: hidden;
+  --devlog-sidebar-width: clamp(150px, 20%, 240px);
 }
 
 /* ─────────────────────────────────────────────────────────────────
    左侧栏 — 20% 宽度
 ───────────────────────────────────────────────────────────────── */
 .devlog-sidebar {
-  width: 20%;
-  min-width: 150px;
-  max-width: 240px;
-  margin: 12px 0 12px 12px;
+  width: var(--devlog-sidebar-width);
+  margin: 52px 0 12px 12px;
   background: var(--bg-surface);
   border: 1px solid var(--border-line);
   border-radius: 14px;
@@ -80,16 +79,6 @@
 
 [data-theme="dark"] .devlog-sidebar {
   box-shadow: 0 3px 14px rgba(0, 0, 0, 0.18);
-}
-
-.devlog-sidebar-archive-row {
-  padding: 10px 10px 8px;
-  flex-shrink: 0;
-}
-
-.devlog-sidebar .devlog-archive-btn {
-  width: 100%;
-  justify-content: center;
 }
 
 .devlog-sidebar-section {
@@ -357,6 +346,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-left: calc(-1 * (var(--devlog-sidebar-width) + 12px));
+  width: calc(100% + var(--devlog-sidebar-width) + 12px);
   padding: 10px 14px 0px;
   background: transparent;
   border-bottom: none;
