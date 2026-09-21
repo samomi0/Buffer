@@ -68,14 +68,10 @@ export function DevlogSidebar({
                 onContextMenu={(e) => { e.preventDefault(); setEditingTag(tag); }}
                 title="单击筛选 · 再次点击反向 · 右键编辑"
               >
-                {tag.pinned && (
-                  <svg className="devlog-tag-pin-icon" width="9" height="9" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                    <path d="M16 1l-1.5 1.5L16 4l-6 6-2.5-1.5L6 10l4 4-5 5 1.5 1.5L11 15l4 4 1.5-1.5L15 16l6-6 1.5 1.5L24 10l-6-6z"/>
-                  </svg>
-                )}
-                <span className="devlog-tag-dot" style={{ background: tag.color }} />
+                <span className="devlog-tag-count" style={{ background: `${tag.color}1a`, color: tag.color, borderColor: `${tag.color}50` }}>
+                  {tagNoteCount(tag.id)}
+                </span>
                 <span className="devlog-tag-label">{tag.name}</span>
-                <span className="devlog-sidebar-count">{tagNoteCount(tag.id)}</span>
                 {state === "include" && (
                   <span className="devlog-tag-state-badge devlog-tag-state-badge--include">+</span>
                 )}
