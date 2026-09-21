@@ -58,6 +58,7 @@
   display: flex;
   flex: 1;
   overflow: hidden;
+  position: relative;
   --devlog-sidebar-width: clamp(150px, 20%, 240px);
 }
 
@@ -337,8 +338,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: visible;
+  overflow: hidden;
   min-width: 0;
+  padding-top: 40px;
 }
 
 /* 顶部工具行：归档 + 重置 + 时间筛选 + 周报 + 搜索 + 新建 */
@@ -346,10 +348,13 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: auto;
+  margin-left: 0;
   z-index: 2;
-  margin-left: calc(-1 * (var(--devlog-sidebar-width) + 12px));
-  width: calc(100% + var(--devlog-sidebar-width) + 12px);
   padding: 10px 14px 0px;
   background: transparent;
   border-bottom: none;
