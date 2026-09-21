@@ -10,7 +10,7 @@ const ICONS: Record<string, string> = {
   file: "[]",
   data: "{}",
   tool: "+",
-  dshweb: "◎",
+  browser: "//",
   terminal: ">_",
 };
 

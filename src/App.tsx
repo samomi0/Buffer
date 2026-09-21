@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
-import { useAppStore, type ToolManifest, type AppTheme, DEFAULT_DSH_CONFIG, DEFAULT_TERMINAL_CONFIG } from "./core/stores/appStore";
+import { useAppStore, type ToolManifest, type AppTheme, DEFAULT_TERMINAL_CONFIG } from "./core/stores/appStore";
 import { AppTopBar } from "./core/components/dashboard/AppTopBar";
 import { WindowBar } from "./core/components/chrome/WindowBar";
 import { CalendarPage } from "./core/components/calendar/CalendarPage";
-import { ToolFrame } from "./core/components/tools/ToolFrame";
 import { DataDirSetup } from "./core/components/setup/DataDirSetup";
 import { SettingsPage } from "./core/components/settings/SettingsPage";
 import { CUSTOM_MODULES, CUSTOM_COMPONENTS } from "./custom/index";
 import { VaultPage } from "./modules/vault/VaultPage";
 import { DevlogPage } from "./modules/devlog/DevlogPage";
-import { DshWebPage } from "./modules/dshweb/DshWebPage";
+import { BrowserPage } from "./modules/browser/BrowserPage";
 import { TerminalPage } from "./modules/terminal/TerminalPage";
 import { readWorkbenchSettings, writeWorkbenchSettings } from "./core/lib/workbenchSettings";
 import { normalizeTopbarToolIds } from "./core/stores/appStore";
@@ -39,10 +38,10 @@ const BUILTIN_MODULES: ToolManifest[] = [
     kind: "builtin",
   },
   {
-    id: "DshWeb",
-    name: "Harness Web",
-    icon: "dshweb",
-    description: "内嵌访问 DeepSeek Harness Web 前端地址",
+    id: "Browser",
+    name: "浏览器",
+    icon: "browser",
+    description: "内嵌网页与本地工具页面浏览器",
     version: "1.0",
     kind: "builtin",
   },
@@ -69,7 +68,6 @@ function App() {
   const setDevlogOpenCmd = useAppStore((s) => s.setDevlogOpenCmd);
   const setDevlogProgress = useAppStore((s) => s.setDevlogProgress);
   const setDevlogColumnOrder = useAppStore((s) => s.setDevlogColumnOrder);
-  const setDshConfig = useAppStore((s) => s.setDshConfig);
   const setTerminalConfig = useAppStore((s) => s.setTerminalConfig);
   const theme = useAppStore((s) => s.theme);
   const setTheme = useAppStore((s) => s.setTheme);
@@ -135,9 +133,6 @@ function App() {
           }
           if (Array.isArray(settings.devlogColumnOrder)) {
             setDevlogColumnOrder(settings.devlogColumnOrder);
-          }
-          if (settings.dsh) {
-            setDshConfig({ ...DEFAULT_DSH_CONFIG, ...settings.dsh });
           }
           if (settings.terminal) {
             setTerminalConfig({ ...DEFAULT_TERMINAL_CONFIG, ...settings.terminal });
@@ -210,16 +205,21 @@ function App() {
       switch (tool.id) {
         case "SecureVault": return <VaultPage />;
         case "DevLog":      return <DevlogPage />;
-        case "DshWeb":      return <DshWebPage />;
+        case "Browser":     return <BrowserPage />;
         case "Terminal":    return <TerminalPage />;
         default:            return <CalendarPage />;
       }
     }
 
-    // custom —— 有原生 React 实现的优先，无则走 iframe
+    // custom —— 有原生 React 实现的优先，无则通过内嵌浏览器打开
     const CustomComponent = CUSTOM_COMPONENTS[tool.id];
     if (CustomComponent) return <CustomComponent />;
-    return <ToolFrame tool={tool} />;
+    return (
+      <BrowserPage
+        initialUrl={`/custom-tools/${tool.id}/index.html`}
+        initialTitle={tool.name}
+      />
+    );
   }
 
   let page: React.ReactNode;

@@ -1,10 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
 
-/** DeepSeek Harness Web 前端地址配置（持久化到工作台设置） */
-export interface DshSettingsConfig {
-  webUrl?: string;
-}
-
 /** 终端配置（持久化到工作台设置） */
 export interface TerminalSettingsConfig {
   shellPath?: string;
@@ -24,8 +19,6 @@ export interface WorkbenchSettings {
   devlogProgress?: { id: string; name: string; color: string }[];
   /** 开发手记看板列顺序（含无状态占位 key，如 "__no_status__"），undefined = 默认顺序 */
   devlogColumnOrder?: string[];
-  /** DeepSeek Harness Web 前端地址配置 */
-  dsh?: DshSettingsConfig;
   /** 终端配置 */
   terminal?: TerminalSettingsConfig;
   /** 外观配置（深色模式等） */

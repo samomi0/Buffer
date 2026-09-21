@@ -1,8 +1,8 @@
 import { useMemo, useState, useCallback, useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 import { readWorkbenchSettings, writeWorkbenchSettings } from "../../lib/workbenchSettings";
 import { syncHolidaysForYear } from "../../lib/holidaySync";
-import { normalizeTopbarToolIds, useAppStore, type ToolManifest, type DevlogProgress, type DshConfig, type TerminalConfig, type AppTheme, DEFAULT_DEVLOG_PROGRESS } from "../../stores/appStore";
-import { DshWebSettingsPanel, TerminalSettingsPanel } from "./IntegrationSettings";
+import { normalizeTopbarToolIds, useAppStore, type ToolManifest, type DevlogProgress, type TerminalConfig, type AppTheme, DEFAULT_DEVLOG_PROGRESS } from "../../stores/appStore";
+import { TerminalSettingsPanel } from "./IntegrationSettings";
 import "./SettingsPage.css";
 
 interface Props {
@@ -31,19 +31,8 @@ export function SettingsPage({ dataDir, onDataDirChange }: Props) {
   const topbarToolIds = useAppStore((s) => s.topbarToolIds);
   const setTopbarToolIds = useAppStore((s) => s.setTopbarToolIds);
 
-  const dshConfig = useAppStore((s) => s.dshConfig);
-  const setDshConfig = useAppStore((s) => s.setDshConfig);
   const terminalConfig = useAppStore((s) => s.terminalConfig);
   const setTerminalConfig = useAppStore((s) => s.setTerminalConfig);
-
-  const saveDshConfig = async (next: DshConfig) => {
-    setDshConfig(next);
-    if (!dataDir) return;
-    try {
-      const settings = await readWorkbenchSettings(dataDir);
-      await writeWorkbenchSettings(dataDir, { ...settings, dsh: next });
-    } catch { /* ignore */ }
-  };
 
   const saveTerminalConfig = async (next: TerminalConfig) => {
     setTerminalConfig(next);
@@ -416,15 +405,6 @@ export function SettingsPage({ dataDir, onDataDirChange }: Props) {
             ))}
           </div>
         </section>
-      ),
-    },
-    {
-      key: "dsh",
-      node: (
-        <DshWebSettingsPanel
-          webUrl={dshConfig.webUrl ?? "http://127.0.0.1:3080"}
-          onSave={(next) => void saveDshConfig({ ...dshConfig, ...(next as DshConfig) })}
-        />
       ),
     },
     {

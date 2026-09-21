@@ -6,53 +6,6 @@ interface SaveProps {
   onSave: (next: Record<string, unknown>) => void;
 }
 
-/** DeepSeek Harness Web 前端地址配置 */
-export function DshWebSettingsPanel({
-  webUrl,
-  onSave,
-}: SaveProps & { webUrl: string }) {
-  const [draft, setDraft] = useState(webUrl);
-  const [saved, setSaved] = useState(false);
-
-  const handleSave = () => {
-    onSave({ webUrl: draft.trim() || "http://127.0.0.1:3080" });
-    setSaved(true);
-    window.setTimeout(() => setSaved(false), 2000);
-  };
-
-  return (
-    <section className="settings-panel">
-      <div className="settings-panel-head compact">
-        <div>
-          <h2>DeepSeek Harness Web</h2>
-          <p>「Harness Web」页签直接内嵌访问该地址，启停与更新请在「终端」中操作。</p>
-        </div>
-      </div>
-
-      <div className="settings-field-card">
-        <span className="settings-field-label">前端地址</span>
-        <div className="settings-field-row">
-          <input
-            className="settings-open-cmd-input"
-            type="text"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSave()}
-            placeholder="http://127.0.0.1:3080"
-          />
-          <button className="settings-btn" onClick={handleSave}>
-            {saved ? "已保存" : "保存"}
-          </button>
-        </div>
-        <p className="settings-inline-message">
-          例如终端中执行 <code>dsh web --no-open</code> 后，默认地址为{" "}
-          <code>http://127.0.0.1:3080</code>。
-        </p>
-      </div>
-    </section>
-  );
-}
-
 /** 终端配置 */
 export function TerminalSettingsPanel({
   shellPath,
