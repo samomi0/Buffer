@@ -36,8 +36,8 @@ export function TagSidebar({
           className={`vault-tag-item ${selectedType === null ? "active" : ""}`}
           onClick={() => onSelectType(null)}
         >
-          <span className="vault-tag-label">全部</span>
           <span className="vault-tag-count">{total}</span>
+          <span className="vault-tag-label">全部</span>
         </button>
         {TYPE_OPTIONS.map((opt) => (
           <button
@@ -45,9 +45,8 @@ export function TagSidebar({
             className={`vault-tag-item ${selectedType === opt.value ? "active" : ""}`}
             onClick={() => onSelectType(opt.value)}
           >
-            <span className="vault-tag-dot" />
-            <span className="vault-tag-label">{opt.label}</span>
             <span className="vault-tag-count">{typeCounts[opt.value] ?? 0}</span>
+            <span className="vault-tag-label">{opt.label}</span>
           </button>
         ))}
       </div>
@@ -84,9 +83,8 @@ export function TagSidebar({
                 onClick={() => onTagFilterChange(tag)}
                 title="单击筛选 · 再次点击反向"
               >
-                <span className="vault-tag-dot" />
-                <span className="vault-tag-label">{tag}</span>
                 <span className="vault-tag-count">{counts[tag] ?? 0}</span>
+                <span className="vault-tag-label">{tag}</span>
                 {state === "include" && (
                   <span className="vault-tag-state-badge vault-tag-state-badge--include">+</span>
                 )}

@@ -248,23 +248,22 @@
 .vault-tag-pin:hover { color: var(--text); background: var(--bg-hover); transform: translateY(-1px); }
 .vault-tag-pin.pinned:hover { color: var(--danger); }
 
-.vault-tag-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--accent);
-  flex-shrink: 0;
-}
-
 .vault-tag-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .vault-tag-count {
-  font-size: 9px;
-  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 18px;
+  padding: 0 5px;
+  border: 1px solid var(--border-line);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-secondary);
   background: var(--bg-elevated);
-  border-radius: 10px;
-  padding: 1px 4px;
-  min-width: 16px;
+  border-radius: 5px;
   text-align: center;
   flex-shrink: 0;
 }
