@@ -29,6 +29,7 @@ interface Props {
   onArchiveNote: (id: string) => void;
   onDeleteNote: (id: string) => void;
   onProgressChange: (noteId: string, progressId: string | undefined) => void;
+  onTogglePinned: (noteId: string) => void;
   onNewNote: () => void;
 }
 
@@ -47,6 +48,7 @@ export function NoteGrid({
   timeFilter, onTimeFilterChange, customFrom, onCustomFromChange, customTo, onCustomToChange,
   onToggleArchived, onResetFilters,
   onOpenNote, onArchiveNote, onDeleteNote, onProgressChange, onNewNote,
+  onTogglePinned,
 }: Props) {
   const [search, setSearch] = useState("");
 
@@ -190,6 +192,7 @@ export function NoteGrid({
           onArchiveNote={onArchiveNote}
           onDeleteNote={onDeleteNote}
           onProgressChange={onProgressChange}
+          onTogglePinned={onTogglePinned}
           onNewNote={onNewNote}
         />
       ) : (
@@ -199,11 +202,9 @@ export function NoteGrid({
               key={note.id}
               note={note}
               tags={tags}
-              progressList={progressList}
               onClick={() => onOpenNote(note)}
               onArchive={() => onArchiveNote(note.id)}
               onDelete={() => onDeleteNote(note.id)}
-              onProgressChange={(pid) => onProgressChange(note.id, pid)}
             />
           ))}
           {/* New note placeholder */}

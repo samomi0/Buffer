@@ -1,16 +1,13 @@
-import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
+import { useState } from "react";
 import type { DevlogNote, DevlogTag } from "./devlog.types";
-import type { DevlogProgress } from "../../core/stores/appStore";
 
 interface Props {
   note: DevlogNote;
   tags: DevlogTag[];
-  progressList?: DevlogProgress[];
   onClick: () => void;
   onArchive: () => void;
   onDelete: () => void;
-  onProgressChange?: (progressId: string | undefined) => void;
+  onTogglePinned?: () => void;
   /** 看板模式：按下卡片后由看板自行判定拖拽（整卡可拖） */
   onDragPointerDown?: (e: React.PointerEvent<HTMLDivElement>) => void;
   /** 拖动中的视觉状态 */
@@ -26,22 +23,10 @@ export function extractPreviewText(content: object, maxChars = 130): string {
   return walk(content as { content?: unknown[] }).trim().replace(/\s+/g, " ").slice(0, maxChars);
 }
 
-export function NoteCard({ note, tags, progressList, onClick, onArchive, onDelete, onProgressChange, onDragPointerDown, dragging }: Props) {
+export function NoteCard({ note, tags, onClick, onArchive, onDelete, onTogglePinned, onDragPointerDown, dragging }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
   const noteTags = tags.filter((t) => note.tags.includes(t.id));
   const preview = extractPreviewText(note.content);
-  const progress = !note.archived && note.progressId
-    ? progressList?.find((p) => p.id === note.progressId)
-    : undefined;
-
-  /* 点击卡片外部关闭进度下拉 */
-  useEffect(() => {
-    if (!dropdownPos) return;
-    function onOutside() { setDropdownPos(null); }
-    document.addEventListener("mousedown", onOutside);
-    return () => document.removeEventListener("mousedown", onOutside);
-  }, [dropdownPos]);
 
   function handleDelete(e: React.MouseEvent) {
     e.stopPropagation();
@@ -50,39 +35,24 @@ export function NoteCard({ note, tags, progressList, onClick, onArchive, onDelet
   function handleCancelDelete(e: React.MouseEvent) { e.stopPropagation(); setConfirmDelete(false); }
   function handleArchive(e: React.MouseEvent) { e.stopPropagation(); onArchive(); }
 
-  function handleProgressBtnClick(e: React.MouseEvent<HTMLButtonElement>) {
-    e.stopPropagation();
-    if (dropdownPos) { setDropdownPos(null); return; }
-    const rect = e.currentTarget.getBoundingClientRect();
-    setDropdownPos({ top: rect.bottom + 4, left: rect.left });
-  }
-
-  function handlePickProgress(e: React.MouseEvent, pid: string | undefined) {
-    e.stopPropagation();
-    onProgressChange?.(pid);
-    setDropdownPos(null);
-  }
-
-  const showProgressBtn = !note.archived && progressList && progressList.length > 0 && !!onProgressChange;
-
   return (
     <div
-      className={dragging ? "devlog-card is-dragging" : "devlog-card"}
+      className={`${dragging ? "devlog-card is-dragging" : "devlog-card"}${note.pinned ? " is-pinned" : ""}`}
       onPointerDown={onDragPointerDown}
       onClick={onClick}
     >
       <div className="devlog-card-actions">
-        {/* 进度快捷按钮 */}
-        {showProgressBtn && (
+        {onTogglePinned && !note.archived && (
           <button
-            className={`devlog-card-btn devlog-card-progress-btn${progress ? " has-progress" : ""}`}
-            title="设置进度"
-            onClick={handleProgressBtnClick}
+            className={`devlog-card-btn devlog-card-pin-btn${note.pinned ? " active" : ""}`}
+            title={note.pinned ? "取消置顶" : "置顶到泳道顶部"}
+            aria-pressed={note.pinned}
+            onClick={(e) => { e.stopPropagation(); onTogglePinned(); }}
           >
-            <span
-              className="devlog-card-progress-indicator"
-              style={progress ? { background: progress.color, boxShadow: `0 0 0 1.5px ${progress.color}55` } : undefined}
-            />
+            <svg width="13" height="13" viewBox="0 0 24 24" fill={note.pinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 21V4" />
+              <path d="M5 4c5-3 9 3 14 0v10c-5 3-9-3-14 0" />
+            </svg>
           </button>
         )}
         <button
@@ -131,36 +101,6 @@ export function NoteCard({ note, tags, progressList, onClick, onArchive, onDelet
         </div>
       )}
 
-      {/* portal 渲染下拉，避免被 overflow:hidden 裁切 */}
-      {dropdownPos && showProgressBtn && createPortal(
-        <div
-          className="devlog-card-progress-dropdown"
-          style={{ top: dropdownPos.top, left: dropdownPos.left }}
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          <button
-            className={`devlog-card-progress-option${!note.progressId ? " active" : ""}`}
-            onClick={(e) => handlePickProgress(e, undefined)}
-          >
-            <span className="devlog-card-progress-indicator" style={{ background: "var(--border)" }} />
-            无
-          </button>
-          {progressList!.map((p) => (
-            <button
-              key={p.id}
-              className={`devlog-card-progress-option${note.progressId === p.id ? " active" : ""}`}
-              onClick={(e) => handlePickProgress(e, p.id)}
-            >
-              <span
-                className="devlog-card-progress-indicator"
-                style={{ background: p.color, boxShadow: `0 0 0 1.5px ${p.color}55` }}
-              />
-              {p.name}
-            </button>
-          ))}
-        </div>,
-        document.body
-      )}
     </div>
   );
 }

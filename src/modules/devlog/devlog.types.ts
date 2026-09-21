@@ -32,6 +32,7 @@ export interface DevlogNote {
   createdAt: string;
   updatedAt: string;
   archived: boolean;
+  pinned?: boolean;
   progressId?: string;
   progressAt?: string;
 }

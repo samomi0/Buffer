@@ -141,6 +141,12 @@ export function DevlogPage() {
     handleUpdateNote({ ...n, progressId, progressAt: formatDateKey(now), updatedAt: now.toISOString() });
   }
 
+  function handleTogglePinned(noteId: string) {
+    const n = notes.find((x) => x.id === noteId);
+    if (!n || n.archived) return;
+    handleUpdateNote({ ...n, pinned: !n.pinned, updatedAt: new Date().toISOString() });
+  }
+
   async function handleAddTag(tag: DevlogTag) {
     const next = [...tags, tag];
     setTags(next);
@@ -256,6 +262,7 @@ export function DevlogPage() {
           onArchiveNote={handleArchiveNote}
           onDeleteNote={handleDeleteNote}
           onProgressChange={handleProgressChange}
+          onTogglePinned={handleTogglePinned}
           onNewNote={handleNewNote}
         />
       </div>

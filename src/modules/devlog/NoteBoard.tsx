@@ -32,6 +32,7 @@ interface Props {
   onArchiveNote: (id: string) => void;
   onDeleteNote: (id: string) => void;
   onProgressChange: (noteId: string, progressId: string | undefined) => void;
+  onTogglePinned: (noteId: string) => void;
   onNewNote: () => void;
 }
 
@@ -103,7 +104,7 @@ function DragGhostCard({ note, tags, width, height, initialTransform, innerRef }
 /* ── Component ───────────────────────────────────────────────── */
 export function NoteBoard({
   notes, tags, progressList, columnOrder, onOrderChange,
-  onOpenNote, onArchiveNote, onDeleteNote, onProgressChange, onNewNote,
+  onOpenNote, onArchiveNote, onDeleteNote, onProgressChange, onTogglePinned, onNewNote,
 }: Props) {
   const progressIds = useMemo(() => progressList.map((p) => p.id), [progressList]);
 
@@ -134,7 +135,10 @@ export function NoteBoard({
       map[key].push(n);
     }
     for (const k of Object.keys(map)) {
-      map[k].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      map[k].sort((a, b) => {
+        if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
     }
     return map;
   }, [notes, progressIds]);
@@ -417,13 +421,12 @@ export function NoteBoard({
                   key={note.id}
                   note={note}
                   tags={tags}
-                  progressList={progressList}
                   dragging={dragCardId === note.id}
                   onDragPointerDown={(e) => handleCardPointerDown(e, note.id)}
                   onClick={() => openNote(note)}
                   onArchive={() => onArchiveNote(note.id)}
                   onDelete={() => onDeleteNote(note.id)}
-                  onProgressChange={(pid) => onProgressChange(note.id, pid)}
+                  onTogglePinned={() => onTogglePinned(note.id)}
                 />
               ))}
               {/* {noteList.length === 0 && col.key !== NO_STATUS_KEY && (
