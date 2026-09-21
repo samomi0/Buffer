@@ -566,11 +566,21 @@
 .devlog-cards-area {
   flex: 1;
   overflow-y: auto;
-  padding: 14px;
+  padding: 16px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(256px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
   align-content: start;
+}
+
+.devlog-cards-area .devlog-card {
+  min-height: 132px;
+  padding: 16px 16px 14px;
+  gap: 8px;
+}
+
+.devlog-cards-area .devlog-card--new {
+  min-height: 132px;
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -658,6 +668,10 @@
   line-height: 1.4;
   padding-right: 52px; /* 避免被操作按钮遮挡 */
   word-break: break-word;
+}
+
+.devlog-cards-area .devlog-card-title {
+  font-size: 14px;
 }
 
 .devlog-card-preview {
