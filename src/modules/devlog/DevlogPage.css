@@ -67,12 +67,19 @@
   width: 20%;
   min-width: 150px;
   max-width: 240px;
+  margin: 12px 0 12px 12px;
   background: var(--bg-surface);
-  border-right: 1px solid var(--border);
+  border: 1px solid var(--border-line);
+  border-radius: 14px;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.06);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   overflow: hidden;
+}
+
+[data-theme="dark"] .devlog-sidebar {
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.18);
 }
 
 .devlog-sidebar-section {
