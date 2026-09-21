@@ -11,15 +11,12 @@ interface Props {
   tagFilters: Record<string, "include" | "exclude">;
   showArchived: boolean;
   timeFilter: TimeFilter;
-  onToggleArchived: () => void;
   /** 点击标签按钮：循环 none→include→exclude→none */
   onTagFilterChange: (tagId: string) => void;
   onAddTag: (tag: DevlogTag) => void;
   onEditTag: (tag: DevlogTag) => void;
   onPinTag: (tagId: string) => void;
   onDeleteTag: (tagId: string) => void;
-  /** 重置所有筛选条件（标签 + 时间） */
-  onResetFilters: () => void;
 }
 
 export function DevlogSidebar({
@@ -28,18 +25,14 @@ export function DevlogSidebar({
   tagFilters,
   showArchived,
   timeFilter,
-  onToggleArchived,
   onTagFilterChange,
   onAddTag,
   onEditTag,
   onPinTag,
   onDeleteTag,
-  onResetFilters,
 }: Props) {
   const [editingTag, setEditingTag] = useState<DevlogTag | null | "new">(null);
   const devlogOpenCmd = useAppStore((s) => s.devlogOpenCmd);
-
-  const totalArchived = notes.filter((n) => n.archived).length;
 
   function tagNoteCount(tagId: string) {
     const dateRange = getDateRange(timeFilter);
@@ -63,31 +56,6 @@ export function DevlogSidebar({
 
   return (
     <aside className="devlog-sidebar">
-      {/* ── 归档 / 重置 工具行（替代原“查看归档”开关行 + “标签”标题行）── */}
-      <div className="devlog-sidebar-toolbar">
-        <button
-          className={`devlog-archive-btn ${showArchived ? "active" : ""}`}
-          onClick={onToggleArchived}
-          title={showArchived ? "退出归档" : "查看归档"}
-          aria-pressed={showArchived}
-        >
-          <svg className="devlog-archive-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="21 8 21 21 3 21 3 8" />
-            <rect x="1" y="3" width="22" height="5" rx="1.5" />
-            <line x1="10" y1="12" x2="14" y2="12" />
-          </svg>
-          <span className="devlog-archive-btn-label">查看归档</span>
-          <span className="devlog-sidebar-count">{totalArchived}</span>
-        </button>
-        <button className="devlog-reset-btn" onClick={onResetFilters} title="重置筛选条件">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="1 4 1 10 7 10" />
-            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-          </svg>
-          <span>重置</span>
-        </button>
-      </div>
-
       {/* ── 标签列表 ──────────────────────────────────────────── */}
       <div className="devlog-sidebar-section devlog-sidebar-section--scroll">
         {[...tags].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)).map((tag) => {

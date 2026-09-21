@@ -10,6 +10,7 @@ interface Props {
   notes: DevlogNote[];
   /** 全量笔记（含归档、未做标签筛选），仅供周报统计使用 */
   reportNotes: DevlogNote[];
+  archivedCount: number;
   tags: DevlogTag[];
   progressList: DevlogProgress[];
   /** 持久化的看板列顺序（含无状态占位），null = 默认 */
@@ -22,6 +23,8 @@ interface Props {
   onCustomFromChange: (v: string) => void;
   customTo: string;
   onCustomToChange: (v: string) => void;
+  onToggleArchived: () => void;
+  onResetFilters: () => void;
   onOpenNote: (note: DevlogNote) => void;
   onArchiveNote: (id: string) => void;
   onDeleteNote: (id: string) => void;
@@ -40,8 +43,9 @@ function extractText(content: object): string {
 
 /* ── Component ───────────────────────────────────────────────── */
 export function NoteGrid({
-  notes, reportNotes, tags, progressList, columnOrder, onColumnOrderChange, showArchived,
+  notes, reportNotes, archivedCount, tags, progressList, columnOrder, onColumnOrderChange, showArchived,
   timeFilter, onTimeFilterChange, customFrom, onCustomFromChange, customTo, onCustomToChange,
+  onToggleArchived, onResetFilters,
   onOpenNote, onArchiveNote, onDeleteNote, onProgressChange, onNewNote,
 }: Props) {
   const [search, setSearch] = useState("");
@@ -94,8 +98,31 @@ export function NoteGrid({
 
   return (
     <div className="devlog-grid-panel">
-      {/* 时间筛选 + 搜索 + 新建 拼成一行 */}
+      {/* 归档、筛选、周报、搜索与新建统一放在同一行 */}
       <div className="devlog-toolbar">
+        <div className="devlog-toolbar-leading">
+          <button
+            className={`devlog-archive-btn ${showArchived ? "active" : ""}`}
+            onClick={onToggleArchived}
+            title={showArchived ? "退出归档" : "查看归档"}
+            aria-pressed={showArchived}
+          >
+            <svg className="devlog-archive-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="21 8 21 21 3 21 3 8" />
+              <rect x="1" y="3" width="22" height="5" rx="1.5" />
+              <line x1="10" y1="12" x2="14" y2="12" />
+            </svg>
+            <span>归档</span>
+            <span className="devlog-sidebar-count">{archivedCount}</span>
+          </button>
+          <button className="devlog-reset-btn" onClick={onResetFilters} title="重置筛选条件">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="1 4 1 10 7 10" />
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+            </svg>
+            <span>重置</span>
+          </button>
+        </div>
         <div className="devlog-time-filter">
           {TIME_OPTIONS.map((type) => (
             <button

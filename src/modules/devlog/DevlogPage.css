@@ -86,17 +86,6 @@
   border-bottom: none;
 }
 
-/* ── 侧栏工具行：归档 / 重置 圆角按钮 ────────────────────────── */
-.devlog-sidebar-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  padding: 10px 10px 8px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
 .devlog-archive-btn,
 .devlog-reset-btn {
   display: inline-flex;
@@ -317,7 +306,7 @@
   min-width: 0;
 }
 
-/* 顶部工具行：时间筛选 + 搜索 + 新建，拼成一行 */
+/* 顶部工具行：归档 + 重置 + 时间筛选 + 周报 + 搜索 + 新建 */
 .devlog-toolbar {
   display: flex;
   align-items: center;
@@ -326,7 +315,15 @@
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  flex-wrap: wrap;
+  min-width: max-content;
+  overflow-x: auto;
+}
+
+.devlog-toolbar-leading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 /* 搜索框缩短（不占满整行），与周报按钮、新建一起靠右排列 */
